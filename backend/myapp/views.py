@@ -22,8 +22,10 @@ def index(request: HttpRequest) -> HttpResponse:
 def home(request):
     return render(request, 'home.html')
 
-def catalogue(request):
-    return render(request, 'catalogue.html')
+def catalogo(request):
+    # Obtener todos los productos
+    productos = Product.objects.all()
+    return render(request, 'catalogo.html', {'productos': productos})
 
 # Devuelve el listado de productos
 class ProductListAPIView(generics.ListAPIView):

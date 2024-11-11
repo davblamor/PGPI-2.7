@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo de Productos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .product-item {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .product-item h2 {
+            font-size: 1.2em;
+            color: #333;
+            margin: 0;
+        }
+        .product-item p {
+            color: #666;
+        }
+        .product-item .price {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .product-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .product-item .category, .product-item .manufacturer {
+            font-size: 0.9em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <h1>Catálogo de Productos</h1>
+    <div class="product-list">
+        {% for producto in productos %}
+            <div class="product-item">
+                {% if producto.image %}
+                    <img src="{{ producto.image.get_image_url }}" alt="{{ producto.name }}">
+                {% else %}
+                    <img src="https://via.placeholder.com/200" alt="Imagen no disponible">
+                {% endif %}
+                <h2>{{ producto.name }}</h2>
+                <p>{{ producto.description }}</p>
+                <p class="price">${{ producto.price }}</p>
+                <p class="category"><strong>Categoría:</strong> {{ producto.category.name }}</p>
+                <p class="manufacturer"><strong>Fabricante:</strong> {{ producto.manufacturer.name }}</p>
+            </div>
+        {% empty %}
+            <p>No hay productos disponibles.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
