@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from base64 import urlsafe_b64encode
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 #Imagenes
 class BlobImage(models.Model):
     content = models.BinaryField()
@@ -15,8 +17,13 @@ class BlobImage(models.Model):
             self.mime_type = guess_type(ruta_archivo)[0]
             self.save()
 
-    def get_image(self):
-        return urlsafe_b64encode(self.content).decode('utf-8')
+    def get_image_url(self):
+        # Guardamos la imagen como un archivo temporal
+        file_name = f"product_image_{self.id}.jpg"  # O el formato adecuado
+        file_path = f"product_images/{file_name}"
+        file = ContentFile(self.content)
+        default_storage.save(file_path, file)
+        return default_storage.url(file_path)
 
 #Categorías de Productos
 class Category(models.Model):

@@ -50,7 +50,7 @@
         {% for producto in productos %}
             <div class="product-item">
                 {% if producto.image %}
-                    <img src="data:{{ producto.image.mime_type }};base64,{{ producto.image.get_image }}" alt="{{ producto.name }}">
+                    <img src="{{ producto.image.get_image_url }}" alt="{{ producto.name }}">
                 {% else %}
                     <img src="https://via.placeholder.com/200" alt="Imagen no disponible">
                 {% endif %}
