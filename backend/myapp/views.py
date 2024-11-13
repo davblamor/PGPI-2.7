@@ -26,7 +26,6 @@ def home(request):
     return render(request, 'home.html')
 
 def catalogo(request):
-    # Obtener todos los productos
     productos = Product.objects.all()
     return render(request, 'catalogo.html', {'productos': productos})
 
@@ -45,7 +44,15 @@ def registro(request):
 def profile(request: HttpRequest) -> HttpResponse:
     return render(request, 'profile.html', {'user': request.user})
 
-
+@login_required
+def add_to_cart(request, product_id):
+    product = Product.objects.get(id=product_id)
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+    if not created:
+        cart_item.quantity += 1
+        cart_item.save()
+    return redirect('catalogo')
 
 # Devuelve el listado de productos
 class ProductListAPIView(generics.ListAPIView):
