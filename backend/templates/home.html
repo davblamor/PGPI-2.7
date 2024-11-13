@@ -27,13 +27,27 @@
         p {
             color: #666;
         }
+        .button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Bienvenido a JMDP<sup>2</sup> Dynamics</h1>
-        <p>Esta es la página de inicio de tu proyecto Django.</p>
-        <p>¡Personalízala para empezar a construir tu aplicación!</p>
+        <p>Aquí podrá acceder a los productos disponibles</p>
+        <a href="/catalogo" class="button">Ir a Catálogo</a>
     </div>
 </body>
 </html>
