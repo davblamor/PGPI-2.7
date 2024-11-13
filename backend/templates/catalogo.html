@@ -111,6 +111,10 @@
                 <p class="price">${{ producto.price }}</p>
                 <p class="category"><strong>Categoría:</strong> {{ producto.category.name }}</p>
                 <p class="manufacturer"><strong>Fabricante:</strong> {{ producto.manufacturer.name }}</p>
+                <form action="{% url 'add_to_cart' producto.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Añadir a la cesta</button>
+                </form>
             </div>
         {% empty %}
             <p>No hay productos disponibles.</p>
