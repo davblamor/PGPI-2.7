@@ -54,6 +54,12 @@ def add_to_cart(request, product_id):
         cart_item.save()
     return redirect('catalogo')
 
+@login_required
+def cart(request):
+    cart = Cart.objects.get(user=request.user)
+    cart_items = cart.item.all()
+    return render(request, 'cart.html', {'cart_items': cart_items})
+
 # Devuelve el listado de productos
 class ProductListAPIView(generics.ListAPIView):
     serializer_class = ProductSerializer
