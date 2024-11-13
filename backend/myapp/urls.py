@@ -11,4 +11,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('registro/', views.registro, name='registro'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('accounts/profile/', views.profile, name='profile'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -16,6 +16,7 @@ from drf_spectacular.utils import OpenApiParameter
 from rest_framework import generics
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -40,7 +41,9 @@ def registro(request):
         form = UserCreationForm()
     return render(request, 'registro.html', {'form': form})
 
-
+@login_required
+def profile(request: HttpRequest) -> HttpResponse:
+    return render(request, 'profile.html', {'user': request.user})
 
 
 
