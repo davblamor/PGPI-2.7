@@ -42,10 +42,62 @@
             font-size: 0.9em;
             color: #888;
         }
+        /* Cabecera */
+        .header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .header img.logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .header-buttons a {
+            background-color: #27ae60;
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .header-buttons a:hover {
+            background-color: #1e874b;
+        }
+
     </style>
 </head>
 <body>
-    <h1>Catálogo de Productos</h1>
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            {% load static %}
+            <img src="{% static 'images/logo.jpg' %}" alt="Logo de la empresa" class="logo">
+            <h1 class="title">Catálogo de Productos</h1>
+        </div>
+        <div class="header-buttons">
+            <a href="{% url 'registro' %}">Registrarse</a>
+            <a href="{% url 'login' %}">Iniciar sesión</a>
+        </div>
+    </div>
     <div class="product-list">
         {% for producto in productos %}
             <div class="product-item">

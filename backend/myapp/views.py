@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse
 from rest_framework.response import Response  # Solo una vez
 from myapp.models import Product
@@ -14,6 +14,9 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from drf_spectacular.utils import OpenApiParameter
 from rest_framework import generics
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -26,6 +29,23 @@ def catalogo(request):
     # Obtener todos los productos
     productos = Product.objects.all()
     return render(request, 'catalogo.html', {'productos': productos})
+
+def registro(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Tu cuenta ha sido creada con éxito. ¡Ahora puedes iniciar sesión!')
+            return redirect('login')  # Cambia 'login' por el nombre de tu URL de inicio de sesión
+    else:
+        form = UserCreationForm()
+    return render(request, 'registro.html', {'form': form})
+
+@login_required
+def profile(request: HttpRequest) -> HttpResponse:
+    return render(request, 'profile.html', {'user': request.user})
+
+
 
 # Devuelve el listado de productos
 class ProductListAPIView(generics.ListAPIView):
