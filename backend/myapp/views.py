@@ -4,6 +4,8 @@ from rest_framework.response import Response  # Solo una vez
 from myapp.models import Product
 from rest_framework.viewsets import ModelViewSet
 from myapp.serializer import *
+from django.contrib.auth import login
+from .forms import RegistrationForm
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, login
 from rest_framework.views import APIView
@@ -17,6 +19,8 @@ from rest_framework import generics
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
+from .forms import LoginForm
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -31,14 +35,19 @@ def catalogo(request):
 
 def registro(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegistrationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Tu cuenta ha sido creada con éxito. ¡Ahora puedes iniciar sesión!')
-            return redirect('login')  # Cambia 'login' por el nombre de tu URL de inicio de sesión
+            user = form.save()
+            login(request, user)
+            return redirect("catalogo")  # Redirige al catálogo
     else:
-        form = UserCreationForm()
+        form = RegistrationForm()
     return render(request, 'registro.html', {'form': form})
+
+class CustomLoginView(LoginView):
+    authentication_form = LoginForm
+    template_name = "registration/login.html"
+
 
 @login_required
 def profile(request: HttpRequest) -> HttpResponse:
