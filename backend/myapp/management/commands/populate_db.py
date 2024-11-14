@@ -1,12 +1,14 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from myapp.models import BlobImage,Category,Manufacturer,Product,Cart,CartItem,Order,OrderItem
-from django.contrib.auth.models import User
+
 
 class Command(BaseCommand):
     help = 'Populate the database with sample data'
 
     def handle(self, *args, **kwargs):
+        User = get_user_model() 
+
         #Create categories
         electronics = Category.objects.create(name="Electronica", description="Dispositivos electrónicos")
         furniture = Category.objects.create(name="Muebles", description="Muebles para hogar y oficina")
@@ -55,7 +57,7 @@ class Command(BaseCommand):
         )
 
         #Creación usuario de prueba
-        user1 = User.objects.create_user(username='testUser',email='testuser@django.com',password='test')
+        user1 = User.objects.create_user(email='testuser@django.com', password='test')
 
         #Crear una cesta y agregar items
         cart = Cart.objects.create(user=user1)

@@ -96,6 +96,8 @@ TEMPLATES = [
     },
 ]
 
+AUTH_USER_MODEL = 'myapp.CustomUser'  
+
 WSGI_APPLICATION = 'PGPIProject.wsgi.application'
 
 
