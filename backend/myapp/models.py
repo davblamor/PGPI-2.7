@@ -10,23 +10,21 @@ from django.conf import settings
 class BlobImage(models.Model):
     content = models.BinaryField()
     mime_type = models.TextField()
+    file_name = models.TextField(blank=True, null=True)
 
     def save_image(self, ruta_archivo):
         from mimetypes import guess_type
+        import os
 
         with open(ruta_archivo, 'rb') as f:
             datos = f.read()
             self.content = datos
             self.mime_type = guess_type(ruta_archivo)[0]
+            self.file_name = os.path.basename(ruta_archivo)
             self.save()
 
     def get_image_url(self):
-        # Guardamos la imagen como un archivo temporal
-        file_name = f"product_image_{self.id}.jpg"  # O el formato adecuado
-        file_path = f"product_images/{file_name}"
-        file = ContentFile(self.content)
-        default_storage.save(file_path, file)
-        return default_storage.url(file_path)
+        return f"/static/images/products/{self.file_name}"
 
 #Categorías de Productos
 class Category(models.Model):

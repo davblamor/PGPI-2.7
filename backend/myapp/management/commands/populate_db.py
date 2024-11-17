@@ -7,7 +7,18 @@ class Command(BaseCommand):
     help = 'Populate the database with sample data'
 
     def handle(self, *args, **kwargs):
-        User = get_user_model() 
+        # Limpiamos tablas relacionadas
+        OrderItem.objects.all().delete()
+        Order.objects.all().delete()
+        CartItem.objects.all().delete()
+        Cart.objects.all().delete()
+        Product.objects.all().delete()
+        BlobImage.objects.all().delete()
+        Category.objects.all().delete()
+        Manufacturer.objects.all().delete()
+
+        User = get_user_model()
+        User.objects.filter(email='testuser@django.com').delete()
 
         #Create categories
         electronics = Category.objects.create(name="Electronica", description="Dispositivos electrónicos")
@@ -20,12 +31,11 @@ class Command(BaseCommand):
 
         #Imágenes
         image_product1 = BlobImage.objects.create()
-        image_product1.save_image('../assets/alingsas-frigorifico-congelador-ikea-500-independiente-ac-inox__1218105_pe913139_s5.avif')
+        image_product1.save_image('static/images/products/alingsas-frigorifico-congelador-ikea-500-independiente-ac-inox__1218105_pe913139_s5.avif')
         image_product2 = BlobImage.objects.create()
-        image_product2.save_image('../assets/micke-escritorio-blanco__0736018_pe740345_s5.avif')
+        image_product2.save_image('static/images/products/micke-escritorio-blanco__0736018_pe740345_s5.avif')
         image_product3 = BlobImage.objects.create()
-        image_product3.save_image('../assets/millberget-silla-giratoria-murum-negro__1020142_pe831799_s5.avif')
-
+        image_product3.save_image('static/images/products/millberget-silla-giratoria-murum-negro__1020142_pe831799_s5.avif')
 
         #Create products
         fridge = Product.objects.create(
