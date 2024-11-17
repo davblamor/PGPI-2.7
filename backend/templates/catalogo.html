@@ -10,38 +10,46 @@
             margin: 0;
             padding: 20px;
         }
+
         .product-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 20px;
         }
+
         .product-item {
             background-color: #fff;
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+
         .product-item h2 {
             font-size: 1.2em;
             color: #333;
             margin: 0;
         }
+
         .product-item p {
             color: #666;
         }
+
         .product-item .price {
             font-weight: bold;
             color: #27ae60;
         }
+
         .product-item img {
             max-width: 100%;
             height: auto;
             border-radius: 4px;
         }
+
         .product-item .category, .product-item .manufacturer {
             font-size: 0.9em;
             color: #888;
         }
+
         /* Cabecera */
         .header {
             background-color: #333;
@@ -84,6 +92,35 @@
             background-color: #1e874b;
         }
 
+        /* Buscador */
+        .search-bar {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .search-bar input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .search-bar button {
+            background-color: #27ae60;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-bar button:hover {
+            background-color: #1e874b;
+        }
     </style>
 </head>
 <body>
@@ -98,6 +135,16 @@
             <a href="{% url 'login' %}">Iniciar sesión</a>
         </div>
     </div>
+
+    <!-- Buscador -->
+    <div class="search-bar">
+        <form method="get" action="{% url 'catalogo' %}">
+            <input type="text" name="q" placeholder="Buscar productos, categorías o fabricantes..." value="{{ query }}">
+            <button type="submit">Buscar</button>
+        </form>
+    </div>
+
+    <!-- Lista de productos -->
     <div class="product-list">
         {% for producto in productos %}
             <div class="product-item">
@@ -117,7 +164,7 @@
                 </form>
             </div>
         {% empty %}
-            <p>No hay productos disponibles.</p>
+            <p>No hay productos que coincidan con tu búsqueda.</p>
         {% endfor %}
     </div>
 </body>

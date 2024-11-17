@@ -21,6 +21,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from .forms import LoginForm
+from django.db.models import Q
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -30,7 +31,16 @@ def home(request):
     return render(request, 'home.html')
 
 def catalogo(request):
-    productos = Product.objects.all()
+    query = request.GET.get('q', '')  
+    productos = Product.objects.all() 
+
+    if query:
+        productos = productos.filter(
+            Q(name__icontains=query) | 
+            Q(category__name__icontains=query) | 
+            Q(manufacturer__name__icontains=query)  
+        )
+
     return render(request, 'catalogo.html', {'productos': productos})
 
 def registro(request):
