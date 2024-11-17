@@ -5,8 +5,18 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class RegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
-    password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirmar contraseña")
+    email = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={'placeholder': 'Ingrese su correo electrónico'})
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'placeholder': 'Ingrese una contraseña'}), 
+        label="Contraseña"
+    )
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={'placeholder': 'Confirme la contraseña'}), 
+        label="Confirmar contraseña"
+    )
 
     class Meta:
         model = User
@@ -27,8 +37,14 @@ class RegistrationForm(forms.ModelForm):
         return user
     
 class LoginForm(AuthenticationForm):
-    username = forms.EmailField(label="Correo electrónico")  # Cambia el nombre a "Correo electrónico"
-
+    username = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={'placeholder': 'Ingrese su correo electrónico'})
+        )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'placeholder': 'Ingrese su contraseña'}), 
+        label="Contraseña"
+    )
     class Meta:
         model = User
         fields = ('username', 'password')
