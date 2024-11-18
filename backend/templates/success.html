@@ -27,6 +27,16 @@
             margin-top: 10px;
             color: #555;
         }
+        .address {
+            margin-top: 20px;
+            text-align: left;
+            display: inline-block;
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
         .home-link {
             margin-top: 20px;
             display: inline-block;
@@ -45,7 +55,15 @@
 <body>
     <div class="container">
         <div class="success-message">¡Pago realizado con éxito!</div>
-        <div class="details">Gracias por tu compra. Recibirás un correo electrónico con los detalles del pedido.</div>
+        <div class="details">Gracias por tu compra, {{ name }}.</div>
+        <div class="details">Tu pedido será enviado a:</div>
+        <div class="address">
+            <p>{{ address.line1 }}</p>
+            <p>{% if address.line2 %}{{ address.line2 }}<br>{% endif %}</p>
+            <p>{{ address.city }}, {{ address.state }}</p>
+            <p>{{ address.postal_code }}</p>
+            <p>{{ address.country }}</p>
+        </div>
         <a href="{% url 'catalogo' %}" class="home-link">Volver al catálogo</a>
     </div>
 </body>

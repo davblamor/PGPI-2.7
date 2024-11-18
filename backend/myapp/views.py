@@ -195,7 +195,7 @@ def cart(request):
             success_url=YOUR_DOMAIN + '/success/?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=YOUR_DOMAIN + '/cart/',
             shipping_address_collection={
-                'allowed_countries': ['US', 'CA', 'ES']  # Add supported countries
+                'allowed_countries': ['US', 'CA', 'ES']
             },
             shipping_options=[
                 {
@@ -315,19 +315,27 @@ def success_view(request):
 
     if session_id:
         try:
-            # Fetch the Stripe session
-            session = stripe.checkout.Session.retrieve(session_id)
-            shipping_details = session.get('shipping', {})
+            # Fetch the Stripe session and expand shipping details
+            session = stripe.checkout.Session.retrieve(session_id, expand=['shipping_details'])
 
-            # Extract address and name if available
+            # Extract shipping details directly
+            shipping_details = session.get('shipping_details', {})
             if shipping_details:
-                address = shipping_details.get('address', address)  # Fallback to default address
-                name = shipping_details.get('name', name)  # Fallback to default name
+                address_obj = shipping_details.get('address', {})
+                name = shipping_details.get('name', name)  # Get name or fallback to default
+
+                # Populate address fields
+                address = {
+                    "line1": address_obj.get('line1', "No disponible"),
+                    "line2": address_obj.get('line2', ""),
+                    "city": address_obj.get('city', "No disponible"),
+                    "state": address_obj.get('state', "No disponible"),
+                    "postal_code": address_obj.get('postal_code', "No disponible"),
+                    "country": address_obj.get('country', "No disponible"),
+                }
         except stripe.error.StripeError as e:
-            # Log the error for debugging purposes
             print(f"Stripe error: {e}")
         except Exception as e:
-            # Catch any other exceptions
             print(f"Error retrieving Stripe session: {e}")
 
     # Clear the user's cart
@@ -335,11 +343,11 @@ def success_view(request):
     if cart:
         cart.item.all().delete()
 
+    # Pass the populated name and address to the template
     return render(request, 'success.html', {
         'name': name,
         'address': address,
     })
-
 
 # Incrementar la cantidad de un producto en el carrito
 @login_required
