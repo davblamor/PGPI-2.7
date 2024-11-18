@@ -17,4 +17,6 @@ urlpatterns = [
     path('accounts/profile/', views.profile, name='profile'),
     path('add_to_cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     path('cart/', views.cart, name='cart'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('cart/add/<int:item_id>/', views.add_quantity, name='add_quantity'),
+    path('cart/subtract/<int:item_id>/', views.subtract_quantity, name='subtract_quantity'),
+] #+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
