@@ -32,7 +32,10 @@ def home(request):
 
 def catalogo(request):
     query = request.GET.get('q', '')  
-    productos = Product.objects.all() 
+    categoria_id = request.GET.get('categoria')
+    fabricante_id = request.GET.get('fabricante')
+
+    productos = Product.objects.all()
     categorias = Category.objects.all()
     fabricantes = Manufacturer.objects.all()
 
@@ -43,13 +46,22 @@ def catalogo(request):
             Q(manufacturer__name__icontains=query)  
         )
 
+    if categoria_id:
+        productos = productos.filter(category_id=categoria_id)
+        filtro = f"Categoría: {Category.objects.get(id=categoria_id).name}"
+    elif fabricante_id:
+        productos = productos.filter(manufacturer_id=fabricante_id)
+        filtro = f"Fabricante: {Manufacturer.objects.get(id=fabricante_id).name}"
+    else:
+        filtro = None
+
     return render(request, 'catalogo.html', {
         'productos': productos,
         'categorias': categorias,
         'fabricantes': fabricantes,
         'query': query,
+        'filtro': filtro,
     })
-
 
 def filtrar_por_categoria(request, categoria_id):
     categoria = get_object_or_404(Category, id=categoria_id)

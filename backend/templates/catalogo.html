@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,7 @@
             margin: 0;
             padding: 0;
         }
-    
+
         .header {
             background-color: #333;
             color: #fff;
@@ -26,24 +27,24 @@
             padding-bottom: 5px;
             margin-bottom: 0;
         }
-    
+
         .header h1 {
             margin: 0;
             font-size: 1.4em;
         }
-    
+
         .header img.logo {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             margin-right: 10px;
         }
-    
+
         .header-buttons {
             display: flex;
             gap: 10px;
         }
-    
+
         .header-buttons a {
             background-color: #27ae60;
             color: #fff;
@@ -53,18 +54,18 @@
             font-size: 0.9em;
             transition: background-color 0.3s;
         }
-    
+
         .header-buttons a:hover {
             background-color: #1e874b;
         }
-    
+
         .container {
             display: grid;
             grid-template-columns: 1fr 4fr;
             gap: 20px;
             padding: 20px;
         }
-    
+
         .sidebar {
             background-color: #fff;
             padding: 15px;
@@ -72,44 +73,46 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             font-size: 0.9em;
             position: sticky;
-            top: 70px; /* Ajusta según el alto de la navbar */
-            height: calc(100vh - 70px); /* Ocupa todo el alto menos la navbar */
+            top: 70px;
+            /* Ajusta según el alto de la navbar */
+            height: calc(100vh - 70px);
+            /* Ocupa todo el alto menos la navbar */
             overflow-y: auto;
         }
-    
+
         .sidebar h3 {
             margin-bottom: 10px;
             color: #333;
             font-size: 1.1em;
         }
-    
+
         .sidebar ul {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-    
+
         .sidebar ul li {
             margin: 5px 0;
         }
-    
+
         .sidebar ul li a {
             text-decoration: none;
             color: #27ae60;
             transition: color 0.3s;
         }
-    
+
         .sidebar ul li a:hover {
             color: #1e874b;
         }
-    
+
         .product-list {
             margin-top: 20px;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
-    
+
         .product-item {
             background-color: #fff;
             padding: 10px;
@@ -118,7 +121,7 @@
             text-align: center;
             font-size: 0.9em;
         }
-    
+
         .product-item img {
             max-width: 100%;
             height: 150px;
@@ -126,23 +129,23 @@
             border-radius: 4px;
             margin-bottom: 10px;
         }
-    
+
         .product-item h2 {
             font-size: 1em;
             color: #333;
             margin: 0;
         }
-    
+
         .product-item p {
             color: #666;
             margin: 5px 0;
         }
-    
+
         .product-item .price {
             font-weight: bold;
             color: #27ae60;
         }
-    
+
         .product-item button {
             background-color: #27ae60;
             color: #fff;
@@ -153,16 +156,51 @@
             font-size: 0.9em;
             transition: background-color 0.3s;
         }
-    
+
         .product-item button:hover {
             background-color: #1e874b;
         }
-    
+
+        .active-filter {
+            margin: 20px 0;
+            text-align: center;
+            background-color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .active-filter p {
+            font-size: 1em;
+            color: #555;
+            margin: 0;
+        }
+
+        .clear-filter {
+            display: inline-block;
+            margin-top: 5px;
+            padding: 8px 15px;
+            background-color: #e74c3c;
+            /* Botón rojo */
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .clear-filter:hover {
+            background-color: #c0392b;
+            /* Más oscuro en hover */
+        }
+
+
         .filter-title {
             font-size: 1.2em;
             margin-bottom: 10px;
             color: #333;
         }
+
         .search-bar {
             margin: 40px 0 20px 0;
             display: flex;
@@ -180,23 +218,28 @@
         }
 
         .search-bar button {
-            background-color: #27ae60; /* Color verde */
-            color: #fff; /* Texto blanco */
+            background-color: #27ae60;
+            /* Color verde */
+            color: #fff;
+            /* Texto blanco */
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 1em; /* Ajusta el tamaño de fuente */
+            font-size: 1em;
+            /* Ajusta el tamaño de fuente */
             transition: background-color 0.3s;
         }
 
         .search-bar button:hover {
-            background-color: #1e874b; /* Color verde más oscuro en hover */
+            background-color: #1e874b;
+            /* Color verde más oscuro en hover */
         }
     </style>
-    
+
 </head>
+
 <body>
     <div class="header">
         <div style="display: flex; align-items: center;">
@@ -210,10 +253,10 @@
         <div class="header-buttons">
             <div class="header-buttons">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a> <!-- Enlace al perfil -->
+                <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a> <!-- Enlace al perfil -->
                 {% else %}
-                    <a href="{% url 'registro' %}">Registrarse</a>
-                    <a href="{% url 'login' %}">Iniciar sesión</a>
+                <a href="{% url 'registro' %}">Registrarse</a>
+                <a href="{% url 'login' %}">Iniciar sesión</a>
                 {% endif %}
             </div>
         </div>
@@ -233,45 +276,54 @@
             <h3>Categorías</h3>
             <ul>
                 {% for categoria in categorias %}
-                    <li><a href="{% url 'filtrar_por_categoria' categoria.id %}">{{ categoria.name }}</a></li>
+                <li><a href="{% url 'filtrar_por_categoria' categoria.id %}">{{ categoria.name }}</a></li>
                 {% endfor %}
             </ul>
-    
+
             <h3>Fabricantes</h3>
             <ul>
                 {% for fabricante in fabricantes %}
-                    <li><a href="{% url 'filtrar_por_fabricante' fabricante.id %}">{{ fabricante.name }}</a></li>
+                <li><a href="{% url 'filtrar_por_fabricante' fabricante.id %}">{{ fabricante.name }}</a></li>
                 {% endfor %}
             </ul>
         </div>
-    
+
         <!-- Lista de productos filtrados -->
         <div>
+            <!-- Mostrar el filtro activo y un botón para quitarlo -->
             {% if filtro %}
-                <h2 class="filter-title">{{ filtro }}</h2>
+            <div class="active-filter">
+                <p>{{ filtro }}</p>
+                <a href="{% url 'catalogo' %}" class="clear-filter">Quitar filtro</a>
+            </div>
+            {% endif %}
+
+            {% if filtro %}
+            <h2 class="filter-title">{{ filtro }}</h2>
             {% endif %}
             <div class="product-list">
                 {% for producto in productos %}
-                    <div class="product-item">
-                        {% if producto.image %}
-                            <img src="{{ producto.image.get_image_url }}" alt="{{ producto.name }}">
-                        {% else %}
-                            <img src="https://via.placeholder.com/200" alt="Imagen no disponible">
-                        {% endif %}
-                        <h2>{{ producto.name }}</h2>
-                        <p>{{ producto.description }}</p>
-                        <p class="price">${{ producto.price }}</p>
-                        <form action="{% url 'add_to_cart' producto.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit">Añadir a la cesta</button>
-                        </form>
-                    </div>
+                <div class="product-item">
+                    {% if producto.image %}
+                    <img src="{{ producto.image.get_image_url }}" alt="{{ producto.name }}">
+                    {% else %}
+                    <img src="https://via.placeholder.com/200" alt="Imagen no disponible">
+                    {% endif %}
+                    <h2>{{ producto.name }}</h2>
+                    <p>{{ producto.description }}</p>
+                    <p class="price">${{ producto.price }}</p>
+                    <form action="{% url 'add_to_cart' producto.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit">Añadir a la cesta</button>
+                    </form>
+                </div>
                 {% empty %}
-                    <p>No hay productos disponibles.</p>
+                <p>No hay productos disponibles.</p>
                 {% endfor %}
             </div>
         </div>
     </div>
-    
+
 </body>
+
 </html>
