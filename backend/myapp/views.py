@@ -1,7 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponse
 from rest_framework.response import Response  # Solo una vez
-from myapp.models import Product
+from myapp.models import Product, Category, Manufacturer
 from rest_framework.viewsets import ModelViewSet
 from myapp.serializer import *
 from django.contrib.auth import login
@@ -33,6 +33,8 @@ def home(request):
 def catalogo(request):
     query = request.GET.get('q', '')  
     productos = Product.objects.all() 
+    categorias = Category.objects.all()
+    fabricantes = Manufacturer.objects.all()
 
     if query:
         productos = productos.filter(
@@ -41,7 +43,39 @@ def catalogo(request):
             Q(manufacturer__name__icontains=query)  
         )
 
-    return render(request, 'catalogo.html', {'productos': productos})
+    return render(request, 'catalogo.html', {
+        'productos': productos,
+        'categorias': categorias,
+        'fabricantes': fabricantes,
+        'query': query,
+    })
+
+
+def filtrar_por_categoria(request, categoria_id):
+    categoria = get_object_or_404(Category, id=categoria_id)
+    productos = Product.objects.filter(category=categoria)
+    categorias = Category.objects.all()
+    fabricantes = Manufacturer.objects.all()
+
+    return render(request, 'catalogo.html', {
+        'productos': productos,
+        'categorias': categorias,
+        'fabricantes': fabricantes,
+        'filtro': f"Categoría: {categoria.name}",
+    })
+
+def filtrar_por_fabricante(request, fabricante_id):
+    fabricante = get_object_or_404(Manufacturer, id=fabricante_id)
+    productos = Product.objects.filter(manufacturer=fabricante)
+    categorias = Category.objects.all()
+    fabricantes = Manufacturer.objects.all()
+
+    return render(request, 'catalogo.html', {
+        'productos': productos,
+        'categorias': categorias,
+        'fabricantes': fabricantes,
+        'filtro': f"Fabricante: {fabricante.name}",
+    })
 
 def registro(request):
     if request.method == 'POST':
