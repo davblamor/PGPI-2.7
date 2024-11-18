@@ -254,12 +254,14 @@
             <img src="{% static 'images/logo.jpg.webp' %}" alt="Logo de la empresa" class="logo">
             <h1>Catálogo de Productos</h1>
         </div>
-        <div class="header-buttons">
-            <a href="{% url 'cart' %}">Ver mi cesta</a>
-            {% if total_items > 0 %}
-                <span class="cart-count">{{ total_items }}</span>
-            {% endif %}
-        </div>
+        {% if user.is_authenticated %}
+            <div class="header-buttons">
+                <a href="{% url 'cart' %}">Ver mi cesta</a>
+                {% if total_items > 0 %}
+                    <span class="cart-count">{{ total_items }}</span>
+                {% endif %}
+            </div>
+        {% endif %}
         <div class="header-buttons">
             {% if user.is_authenticated %}
                 <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a>
