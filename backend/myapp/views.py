@@ -168,36 +168,62 @@ def cart(request):
         for item in cart_items
     ]
 
-    # Check if the cart is empty
     if cart_items:
         stripe.api_key = settings.STRIPE_SECRET_KEY
         YOUR_DOMAIN = "http://127.0.0.1:8000"  # Replace with your deployed domain
 
         # Create line items for Stripe Checkout
-        line_items = []
-        for item in cart_items:
-            line_items.append({
+        line_items = [
+            {
                 'price_data': {
                     'currency': 'usd',
                     'product_data': {
                         'name': item.product.name,
                     },
-                    'unit_amount': int(item.product.price * 100),  # Convert price to cents
+                    'unit_amount': int(item.product.price * 100),
                 },
                 'quantity': item.quantity,
-            })
+            }
+            for item in cart_items
+        ]
 
         # Create the Stripe Checkout session
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url=YOUR_DOMAIN + '/success/',
+            success_url=YOUR_DOMAIN + '/success/?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=YOUR_DOMAIN + '/cart/',
+            shipping_address_collection={
+                'allowed_countries': ['US', 'CA', 'ES']  # Add supported countries
+            },
+            shipping_options=[
+                {
+                    'shipping_rate_data': {
+                        'type': 'fixed_amount',
+                        'fixed_amount': {'amount': 500, 'currency': 'usd'},
+                        'display_name': 'Standard shipping',
+                        'delivery_estimate': {
+                            'minimum': {'unit': 'business_day', 'value': 5},
+                            'maximum': {'unit': 'business_day', 'value': 7},
+                        },
+                    },
+                },
+                {
+                    'shipping_rate_data': {
+                        'type': 'fixed_amount',
+                        'fixed_amount': {'amount': 1500, 'currency': 'usd'},
+                        'display_name': 'Express shipping',
+                        'delivery_estimate': {
+                            'minimum': {'unit': 'business_day', 'value': 1},
+                            'maximum': {'unit': 'business_day', 'value': 3},
+                        },
+                    },
+                },
+            ]
         )
         checkout_session_id = checkout_session.id
     else:
-        # If the cart is empty, no Checkout session is created
         checkout_session_id = None
 
     return render(request, 'cart.html', {
@@ -235,8 +261,35 @@ class StripeCheckoutSessionView(View):
                 payment_method_types=['card'],
                 line_items=line_items,
                 mode='payment',
-                success_url=YOUR_DOMAIN + '/success/',
+                success_url=YOUR_DOMAIN + '/success/?session_id={CHECKOUT_SESSION_ID}',
                 cancel_url=YOUR_DOMAIN + '/cart/',
+                shipping_address_collection={
+                    'allowed_countries': ['US', 'CA', 'ES'], 
+                },
+                shipping_options=[
+                    {
+                        'shipping_rate_data': {
+                            'type': 'fixed_amount',
+                            'fixed_amount': {'amount': 500, 'currency': 'usd'},
+                            'display_name': 'Standard shipping',
+                            'delivery_estimate': {
+                                'minimum': {'unit': 'business_day', 'value': 5},
+                                'maximum': {'unit': 'business_day', 'value': 7},
+                            },
+                        },
+                    },
+                    {
+                        'shipping_rate_data': {
+                            'type': 'fixed_amount',
+                            'fixed_amount': {'amount': 1500, 'currency': 'usd'},
+                            'display_name': 'Express shipping',
+                            'delivery_estimate': {
+                                'minimum': {'unit': 'business_day', 'value': 1},
+                                'maximum': {'unit': 'business_day', 'value': 3},
+                            },
+                        },
+                    },
+                ],
             )
             return JsonResponse({'id': checkout_session.id})
         except Exception as e:
@@ -246,13 +299,46 @@ class StripeCheckoutSessionView(View):
 # Success view
 @login_required
 def success_view(request):
-    
+    # Default values for name and address
+    name = "Cliente"
+    address = {
+        "line1": "No disponible",
+        "line2": "",
+        "city": "No disponible",
+        "state": "No disponible",
+        "postal_code": "No disponible",
+        "country": "No disponible",
+    }
+
+    # Retrieve the session ID from the query parameters
+    session_id = request.GET.get('session_id')
+
+    if session_id:
+        try:
+            # Fetch the Stripe session
+            session = stripe.checkout.Session.retrieve(session_id)
+            shipping_details = session.get('shipping', {})
+
+            # Extract address and name if available
+            if shipping_details:
+                address = shipping_details.get('address', address)  # Fallback to default address
+                name = shipping_details.get('name', name)  # Fallback to default name
+        except stripe.error.StripeError as e:
+            # Log the error for debugging purposes
+            print(f"Stripe error: {e}")
+        except Exception as e:
+            # Catch any other exceptions
+            print(f"Error retrieving Stripe session: {e}")
+
+    # Clear the user's cart
     cart = Cart.objects.filter(user=request.user).first()
     if cart:
-        # Delete all items in the cart
         cart.item.all().delete()
 
-    return render(request, 'success.html')
+    return render(request, 'success.html', {
+        'name': name,
+        'address': address,
+    })
 
 
 # Incrementar la cantidad de un producto en el carrito
