@@ -27,10 +27,9 @@ class RegistrationForm(forms.ModelForm):
     def clean_password(self):
         password = self.cleaned_data.get('password')
         try:
-            # Valida la contraseña con los validadores predeterminados de Django
             validate_password(password)
         except ValidationError as e:
-            raise forms.ValidationError(("La contraseña debe tener al menos 8 caracteres y cumplir con los requisitos de seguridad."))
+            raise forms.ValidationError(e.messages)
         return password
 
     def clean_password_confirm(self):
