@@ -5,23 +5,23 @@ from myapp.models import Product
 from rest_framework.viewsets import ModelViewSet
 from myapp.serializer import *
 from django.contrib.auth import login
-from .forms import RegistrationForm
+from .forms import RegistrationForm, LoginForm
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, login
 from rest_framework.views import APIView
 from rest_framework import status, permissions
-from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from drf_spectacular.utils import OpenApiParameter
 from rest_framework import generics
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from .forms import LoginForm
 from django.db.models import Q
+from django.urls import reverse
+
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -57,6 +57,9 @@ def registro(request):
 class CustomLoginView(LoginView):
     authentication_form = LoginForm
     template_name = "registration/login.html"
+
+    def get_success_url(self):
+        return reverse('catalogo')
 
 
 @login_required
