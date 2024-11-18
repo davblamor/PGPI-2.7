@@ -14,8 +14,8 @@
         }
 
         .header {
-            background-color: #333;
-            color: #fff;
+            background-color: #fff;
+            color: #333;
             padding: 10px 20px;
             display: flex;
             justify-content: space-between;
@@ -29,15 +29,17 @@
         }
 
         .header h1 {
+            font-size: 1.8em;
             margin: 0;
-            font-size: 1.4em;
         }
 
         .header img.logo {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-right: 15px;
+            transform: scale(1.2);
+            transition: transform 0.3s;
         }
 
         .header-buttons {
@@ -52,11 +54,25 @@
             padding: 8px 15px;
             border-radius: 5px;
             font-size: 0.9em;
+            font-weight: bold;
             transition: background-color 0.3s;
         }
 
         .header-buttons a:hover {
             background-color: #1e874b;
+        }
+
+        .cart-count {
+            background-color: #1e874b;
+            color: #fff;
+            border-radius: 50%;
+            padding: 4px 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-left: 5px;
+            display: inline-block;
+            text-align: center;
+            min-width: 20px;
         }
 
         .container {
@@ -74,9 +90,7 @@
             font-size: 0.9em;
             position: sticky;
             top: 70px;
-            /* Ajusta según el alto de la navbar */
             height: calc(100vh - 70px);
-            /* Ocupa todo el alto menos la navbar */
             overflow-y: auto;
         }
 
@@ -115,7 +129,7 @@
 
         .product-item {
             background-color: #fff;
-            padding: 10px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
@@ -131,7 +145,7 @@
         }
 
         .product-item h2 {
-            font-size: 1em;
+            font-size: 1.2em;
             color: #333;
             margin: 0;
         }
@@ -194,7 +208,6 @@
             /* Más oscuro en hover */
         }
 
-
         .filter-title {
             font-size: 1.2em;
             margin-bottom: 10px;
@@ -202,7 +215,7 @@
         }
 
         .search-bar {
-            margin: 40px 0 20px 0;
+            margin: 20px 0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -219,25 +232,19 @@
 
         .search-bar button {
             background-color: #27ae60;
-            /* Color verde */
             color: #fff;
-            /* Texto blanco */
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 1em;
-            /* Ajusta el tamaño de fuente */
             transition: background-color 0.3s;
         }
 
         .search-bar button:hover {
             background-color: #1e874b;
-            /* Color verde más oscuro en hover */
         }
     </style>
-
 </head>
 
 <body>
@@ -247,20 +254,24 @@
             <img src="{% static 'images/logo.jpg.webp' %}" alt="Logo de la empresa" class="logo">
             <h1>Catálogo de Productos</h1>
         </div>
-        <div class="header-buttons">
-            <a href="{% url 'cart' %}">Ver mi cesta</a>
-        </div>
-        <div class="header-buttons">
+        {% if user.is_authenticated %}
             <div class="header-buttons">
-                {% if user.is_authenticated %}
-                <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a> <!-- Enlace al perfil -->
-                {% else %}
-                <a href="{% url 'registro' %}">Registrarse</a>
-                <a href="{% url 'login' %}">Iniciar sesión</a>
+                <a href="{% url 'cart' %}">Ver mi cesta</a>
+                {% if total_items > 0 %}
+                    <span class="cart-count">{{ total_items }}</span>
                 {% endif %}
             </div>
+        {% endif %}
+        <div class="header-buttons">
+            {% if user.is_authenticated %}
+                <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a>
+            {% else %}
+                <a href="{% url 'registro' %}">Registrarse</a>
+                <a href="{% url 'login' %}">Iniciar sesión</a>
+            {% endif %}
         </div>
     </div>
+
     <!-- Buscador -->
     <div class="search-bar">
         <form method="get" action="{% url 'catalogo' %}">
@@ -269,61 +280,59 @@
         </form>
     </div>
 
-
     <div class="container">
         <!-- Barra lateral -->
         <div class="sidebar">
             <h3>Categorías</h3>
             <ul>
                 {% for categoria in categorias %}
-                <li><a href="{% url 'filtrar_por_categoria' categoria.id %}">{{ categoria.name }}</a></li>
+                    <li><a href="{% url 'filtrar_por_categoria' categoria.id %}">{{ categoria.name }}</a></li>
                 {% endfor %}
             </ul>
 
             <h3>Fabricantes</h3>
             <ul>
                 {% for fabricante in fabricantes %}
-                <li><a href="{% url 'filtrar_por_fabricante' fabricante.id %}">{{ fabricante.name }}</a></li>
+                    <li><a href="{% url 'filtrar_por_fabricante' fabricante.id %}">{{ fabricante.name }}</a></li>
                 {% endfor %}
             </ul>
         </div>
 
         <!-- Lista de productos filtrados -->
         <div>
-            <!-- Mostrar el filtro activo y un botón para quitarlo -->
             {% if filtro %}
-            <div class="active-filter">
-                <p>{{ filtro }}</p>
-                <a href="{% url 'catalogo' %}" class="clear-filter">Quitar filtro</a>
-            </div>
+                <div class="active-filter">
+                    <p>{{ filtro }}</p>
+                    <a href="{% url 'catalogo' %}" class="clear-filter">Quitar filtro</a>
+                </div>
             {% endif %}
 
             {% if filtro %}
             <h2 class="filter-title">{{ filtro }}</h2>
             {% endif %}
+
             <div class="product-list">
                 {% for producto in productos %}
-                <div class="product-item">
-                    {% if producto.image %}
-                    <img src="{{ producto.image.get_image_url }}" alt="{{ producto.name }}">
-                    {% else %}
-                    <img src="https://via.placeholder.com/200" alt="Imagen no disponible">
-                    {% endif %}
-                    <h2>{{ producto.name }}</h2>
-                    <p>{{ producto.description }}</p>
-                    <p class="price">${{ producto.price }}</p>
-                    <form action="{% url 'add_to_cart' producto.id %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit">Añadir a la cesta</button>
-                    </form>
-                </div>
+                    <div class="product-item">
+                        {% if producto.image %}
+                            <img src="{{ producto.image.get_image_url }}" alt="{{ producto.name }}">
+                        {% else %}
+                            <img src="https://via.placeholder.com/200" alt="Imagen no disponible">
+                        {% endif %}
+                        <h2>{{ producto.name }}</h2>
+                        <p>{{ producto.description }}</p>
+                        <p class="price">${{ producto.price }}</p>
+                        <form action="{% url 'add_to_cart' producto.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit">Añadir a la cesta</button>
+                        </form>
+                    </div>
                 {% empty %}
-                <p>No hay productos disponibles.</p>
+                    <p>No hay productos disponibles.</p>
                 {% endfor %}
             </div>
         </div>
     </div>
-
 </body>
 
 </html>
