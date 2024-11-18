@@ -185,8 +185,14 @@
             <a href="{% url 'cart' %}">Ver mi cesta</a>
         </div>
         <div class="header-buttons">
-            <a href="{% url 'registro' %}">Registrarse</a>
-            <a href="{% url 'login' %}">Iniciar sesión</a>
+            <div class="header-buttons">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a> <!-- Enlace al perfil -->
+                {% else %}
+                    <a href="{% url 'registro' %}">Registrarse</a>
+                    <a href="{% url 'login' %}">Iniciar sesión</a>
+                {% endif %}
+            </div>
         </div>
     </div>
     <!-- Buscador -->
