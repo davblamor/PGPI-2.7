@@ -254,14 +254,14 @@
             <img src="{% static 'images/logo.jpg.webp' %}" alt="Logo de la empresa" class="logo">
             <h1>Catálogo de Productos</h1>
         </div>
-        {% if user.is_authenticated %}
-            <div class="header-buttons">
-                <a href="{% url 'cart' %}">Ver mi cesta</a>
-                {% if total_items > 0 %}
-                    <span class="cart-count">{{ total_items }}</span>
-                {% endif %}
-            </div>
-        {% endif %}
+        <div class="header-buttons">
+            <a href="{% if user.is_authenticated %}{% url 'cart' %}{% else %}{% url 'cart_guest' %}{% endif %}">
+                Ver mi cesta
+            </a>
+            {% if total_items > 0 %}
+                <span class="cart-count">{{ total_items }}</span>
+            {% endif %}
+        </div>      
         <div class="header-buttons">
             {% if user.is_authenticated %}
                 <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a>
@@ -322,7 +322,7 @@
                         <h2>{{ producto.name }}</h2>
                         <p>{{ producto.description }}</p>
                         <p class="price">${{ producto.price }}</p>
-                        <form action="{% url 'add_to_cart' producto.id %}" method="post">
+                        <form action="{% if user.is_authenticated %}{% url 'add_to_cart' producto.id %}{% else %}{% url 'add_to_cart_guest' producto.id %}{% endif %}" method="post">
                             {% csrf_token %}
                             <button type="submit">Añadir a la cesta</button>
                         </form>

@@ -68,6 +68,9 @@ def catalogo(request):
         cart = Cart.objects.filter(user=request.user).first()
         if cart:
             total_items = sum(item.quantity for item in cart.item.all())
+    else:
+        cart = request.session.get('cart', {})
+        total_items = sum(item['quantity'] for item in cart.values())
 
     return render(request, 'catalogo.html', {
         'productos': productos,
@@ -368,6 +371,204 @@ def decrease_cart_quantity(request, cart_item_id):
     else:
         cart_item.delete()
     return redirect('cart')
+
+def add_to_cart_guest(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    cart = request.session.get('cart', {})
+
+    if str(product_id) in cart:
+        cart[str(product_id)]['quantity'] += 1
+    else:
+        cart[str(product_id)] = {
+            'name': product.name,
+            'price': float(product.price),  # Convertimos Decimal a float
+            'quantity': 1,
+        }
+
+    request.session['cart'] = cart
+    return redirect('catalogo')
+
+def cart_guest(request):
+    cart = request.session.get('cart', {})
+    total_items = sum(item['quantity'] for item in cart.values())
+    total_price = sum(item['price'] * item['quantity'] for item in cart.values())
+
+    cart_items_with_totals = [
+        {
+            'product_id': key,
+            'name': item['name'],
+            'quantity': item['quantity'],
+            'price': item['price'],
+            'total_price': item['price'] * item['quantity'],
+        }
+        for key, item in cart.items()
+    ]
+
+    return render(request, 'cart_guest.html', {
+        'cart_items_with_totals': cart_items_with_totals,
+        'total_items': total_items,
+        'total_price': total_price,
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+    })
+
+def initiate_checkout_guest(request):
+    cart = request.session.get('cart', {})
+    if not cart:
+        return redirect('cart_guest')
+
+    cart_items_with_totals = [
+        {
+            'name': item['name'],
+            'quantity': item['quantity'],
+            'price': item['price'],
+            'total_price': item['price'] * item['quantity'],
+        }
+        for item in cart.values()
+    ]
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    YOUR_DOMAIN = "http://127.0.0.1:8000"  # Reemplaza con tu dominio
+
+    line_items = [
+        {
+            'price_data': {
+                'currency': 'usd',
+                'product_data': {
+                    'name': item['name'],
+                },
+                'unit_amount': int(item['price'] * 100),  # Convierte a centavos
+            },
+            'quantity': item['quantity'],
+        }
+        for item in cart_items_with_totals
+    ]
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url=YOUR_DOMAIN + '/success_guest/?session_id={CHECKOUT_SESSION_ID}',  # Redirige a la nueva vista de éxito para invitados
+            cancel_url=YOUR_DOMAIN + '/cart_guest/',
+            shipping_address_collection={
+                'allowed_countries': ['US', 'CA', 'ES']
+            },
+            shipping_options=[
+                {
+                    'shipping_rate_data': {
+                        'type': 'fixed_amount',
+                        'fixed_amount': {'amount': 500, 'currency': 'usd'},
+                        'display_name': 'Standard shipping',
+                        'delivery_estimate': {
+                            'minimum': {'unit': 'business_day', 'value': 5},
+                            'maximum': {'unit': 'business_day', 'value': 7},
+                        },
+                    },
+                },
+                {
+                    'shipping_rate_data': {
+                        'type': 'fixed_amount',
+                        'fixed_amount': {'amount': 1500, 'currency': 'usd'},
+                        'display_name': 'Express shipping',
+                        'delivery_estimate': {
+                            'minimum': {'unit': 'business_day', 'value': 1},
+                            'maximum': {'unit': 'business_day', 'value': 3},
+                        },
+                    },
+                },
+            ],
+        )
+        return redirect(checkout_session.url, code=303)
+    except Exception as e:
+        return render(request, 'checkout_error.html', {'error': str(e)})
+    
+def increase_cart_quantity_guest(request, product_id):
+    cart = request.session.get('cart', {})
+    
+    if str(product_id) in cart:
+        cart[str(product_id)]['quantity'] += 1
+        request.session['cart'] = cart  # Actualiza el carrito en la sesión
+
+    return redirect('cart_guest')
+
+
+def decrease_cart_quantity_guest(request, product_id):
+    cart = request.session.get('cart', {})
+    
+    if str(product_id) in cart:
+        if cart[str(product_id)]['quantity'] > 1:
+            cart[str(product_id)]['quantity'] -= 1
+        else:
+            del cart[str(product_id)]  # Elimina el producto si la cantidad llega a 0
+        request.session['cart'] = cart  # Actualiza el carrito en la sesión
+
+    return redirect('cart_guest')
+
+def success_guest_view(request):
+    # Recuperar el session_id de la URL
+    session_id = request.GET.get('session_id')
+
+    if session_id:
+        try:
+            # Obtener la sesión de Stripe y expandir los detalles de envío
+            session = stripe.checkout.Session.retrieve(session_id, expand=['shipping', 'payment_intent'])
+            print("Contenido de la sesión de Stripe:", session)  # Agrega esta línea para depurar
+
+            shipping_details = session.get('shipping', {})
+            if shipping_details:
+                name = shipping_details.get('name', "Cliente")
+                address = shipping_details.get('address', {
+                    "line1": "No disponible",
+                    "line2": "",
+                    "city": "No disponible",
+                    "state": "No disponible",
+                    "postal_code": "No disponible",
+                    "country": "No disponible",
+                })
+            else:
+                name = "Cliente"
+                address = {
+                    "line1": "No disponible",
+                    "line2": "",
+                    "city": "No disponible",
+                    "state": "No disponible",
+                    "postal_code": "No disponible",
+                    "country": "No disponible",
+                }
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e}")
+            name = "Cliente"
+            address = {
+                "line1": "No disponible",
+                "line2": "",
+                "city": "No disponible",
+                "state": "No disponible",
+                "postal_code": "No disponible",
+                "country": "No disponible",
+            }
+        except Exception as e:
+            print(f"Error retrieving Stripe session: {e}")
+            name = "Cliente"
+            address = {
+                "line1": "No disponible",
+                "line2": "",
+                "city": "No disponible",
+                "state": "No disponible",
+                "postal_code": "No disponible",
+                "country": "No disponible",
+            }
+
+    # Limpiar el carrito de la sesión
+    if 'cart' in request.session:
+        del request.session['cart']
+
+    return render(request, 'success_guest.html', {
+        'name': name,
+        'address': address,
+    })
+
+
+
 
 
 # API para obtener el listado de productos
