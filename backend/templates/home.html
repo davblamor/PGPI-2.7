@@ -6,7 +6,7 @@
     <title>Bienvenido a JMDP<sup>2</sup> Dynamics</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Times New Roman', Times, serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -22,7 +22,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         h1 {
-            color: #333;
+            color: #000000;
         }
         p {
             color: #666;
@@ -41,11 +41,20 @@
         .button:hover {
             background-color: #0056b3;
         }
+        .logo {
+            display: block;
+            margin: 10px auto; /* Centrado y espacio arriba/abajo */
+            width: 200px; /* Ajustar el ancho del logo */
+            height: auto; /* Mantener la proporción */
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Bienvenido a JMDP<sup>2</sup> Dynamics</h1>
+        {% load static %}
+        <img src="{% static 'images/logo.jpg.webp' %}" alt="Logo de la empresa" class="logo">
         <p>Aquí podrá acceder a los productos disponibles</p>
         <a href="/catalogo" class="button">Ir a Catálogo</a>
     </div>
