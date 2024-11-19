@@ -27,6 +27,10 @@ class Command(BaseCommand):
         #Create manufacturers
         samsung = Manufacturer.objects.create(name="Samsung", description="Fabricante de electrodomésticos")
         ikea = Manufacturer.objects.create(name="Ikea", description="Fabricante de muebles")
+        siemens = Manufacturer.objects.create(name="Siemens", description="Fabricante de electrodomésticos")
+        leroy = Manufacturer.objects.create(name="Leroy Merlin", description="Fabricante de muebles")
+        lg = Manufacturer.objects.create(name="LG", description="Fabricante de electrodomésticos")
+
 
 
         #Imágenes
@@ -36,11 +40,19 @@ class Command(BaseCommand):
         image_product2.save_image('static/images/products/micke-escritorio-blanco__0736018_pe740345_s5.avif')
         image_product3 = BlobImage.objects.create()
         image_product3.save_image('static/images/products/millberget-silla-giratoria-murum-negro__1020142_pe831799_s5.avif')
+        image_product4 = BlobImage.objects.create()
+        image_product4.save_image('static/images/products/lavavajillas_Siemens.jpg')
+        image_product5 = BlobImage.objects.create()
+        image_product5.save_image('static/images/products/televisor_Samsung.jpeg')
+        image_product6 = BlobImage.objects.create()
+        image_product6.save_image('static/images/products/lavavadora_lg.avif')
+        image_product7 = BlobImage.objects.create()
+        image_product7.save_image('static/images/products/escritorio_leroy.webp')
 
         #Create products
         fridge = Product.objects.create(
             name="Nevera",
-            description="No frost nevera",
+            description="Nevera sin escarcha",
             price=999.99,
             stock=10,
             image=image_product1,
@@ -49,7 +61,7 @@ class Command(BaseCommand):
         )
         desk = Product.objects.create(
             name="Escritorio",
-            description="Office desk",
+            description="Mesa de escritorio",
             price=150.00,
             stock=5,
             image=image_product2,
@@ -65,6 +77,44 @@ class Command(BaseCommand):
             category=furniture,
             manufacturer=ikea
         )
+        dishwasher = Product.objects.create(
+            name="Lavavajillas",
+            description="Lavavajillas multifuncional",
+            price=649.00,
+            stock=8,
+            image=image_product4,
+            category=electronics,
+            manufacturer=siemens
+        )
+        tv = Product.objects.create(
+            name="Televisor",
+            description="Televisor Samsung QLED 4K/55 pulgadas",
+            price=1150.00,
+            stock=1,
+            image=image_product5,
+            category=electronics,
+            manufacturer=samsung
+        )
+        washing_machine = Product.objects.create(
+            name="Lavadora",
+            description="Lavadora 10% más eficiente",
+            price=531.45,
+            stock=0,
+            image=image_product6,
+            category=electronics,
+            manufacturer=lg
+        )
+        desk_2 = Product.objects.create(
+            name="Escritorio",
+            description="Mesa de escritorio",
+            price=110.00,
+            stock=4,
+            image=image_product7,
+            category=furniture,
+            manufacturer=leroy
+        )
+
+        self.stdout.write(self.style.SUCCESS('Nuevos productos añadidos con éxito'))
 
         #Creación usuario de prueba
         user1 = User.objects.create_user(email='testuser@django.com', password='test')
