@@ -5,6 +5,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.conf import settings
+import mimetypes
 
 #Imagenes
 class BlobImage(models.Model):
@@ -19,7 +20,7 @@ class BlobImage(models.Model):
         with open(ruta_archivo, 'rb') as f:
             datos = f.read()
             self.content = datos
-            self.mime_type = guess_type(ruta_archivo)[0]
+            self.mime_type = mimetypes.guess_type(ruta_archivo)[0] or "application/octet-stream"
             self.file_name = os.path.basename(ruta_archivo)
             self.save()
 
