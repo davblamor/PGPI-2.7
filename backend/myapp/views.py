@@ -143,13 +143,15 @@ def profile(request: HttpRequest) -> HttpResponse:
 # Añadir productos al carrito
 @login_required
 def add_to_cart(request, product_id):
-    product = Product.objects.get(id=product_id)
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-    if not created:
-        cart_item.quantity += 1
-        cart_item.save()
+    product = get_object_or_404(Product, id=product_id)
+    if product.stock > 0:
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+        if not created:
+            cart_item.quantity += 1
+            cart_item.save()
     return redirect('catalogo')
+
 
 
 # Vista del carrito de compras
@@ -302,6 +304,7 @@ class StripeCheckoutSessionView(View):
 # Success view
 @login_required
 def success_view(request):
+    print("Ejecutando success_view...")
     # Default values for name and address
     name = "Cliente"
     address = {
@@ -318,16 +321,11 @@ def success_view(request):
 
     if session_id:
         try:
-            # Fetch the Stripe session and expand shipping details
             session = stripe.checkout.Session.retrieve(session_id, expand=['shipping_details'])
-
-            # Extract shipping details directly
             shipping_details = session.get('shipping_details', {})
             if shipping_details:
                 address_obj = shipping_details.get('address', {})
-                name = shipping_details.get('name', name)  # Get name or fallback to default
-
-                # Populate address fields
+                name = shipping_details.get('name', name)
                 address = {
                     "line1": address_obj.get('line1', "No disponible"),
                     "line2": address_obj.get('line2', ""),
@@ -341,12 +339,15 @@ def success_view(request):
         except Exception as e:
             print(f"Error retrieving Stripe session: {e}")
 
-    # Clear the user's cart
+    # Clear the user's cart and update product stock
     cart = Cart.objects.filter(user=request.user).first()
     if cart:
+        for item in cart.item.all():
+            product = item.product
+            product.stock -= item.quantity
+            product.save()
         cart.item.all().delete()
 
-    # Pass the populated name and address to the template
     return render(request, 'success.html', {
         'name': name,
         'address': address,
@@ -524,38 +525,21 @@ def success_guest_view(request):
                     "postal_code": address.get('postal_code', "No disponible"),
                     "country": address.get('country', "No disponible"),
                 }
-
-            else:
-                name = "Cliente"
-                address = {
-                    "line1": "No disponible",
-                    "line2": "",
-                    "city": "No disponible",
-                    "state": "No disponible",
-                    "postal_code": "No disponible",
-                    "country": "No disponible",
-                }
         except stripe.error.StripeError as e:
-            name = "Cliente"
-            address = {
-                "line1": "No disponible",
-                "line2": "",
-                "city": "No disponible",
-                "state": "No disponible",
-                "postal_code": "No disponible",
-                "country": "No disponible",
-            }
+            print(f"Stripe error: {e}")
         except Exception as e:
-            name = "Cliente"
-            address = {
-                "line1": "No disponible",
-                "line2": "",
-                "city": "No disponible",
-                "state": "No disponible",
-                "postal_code": "No disponible",
-                "country": "No disponible",
-            }
+            print(f"Error retrieving Stripe session: {e}")
+    
+    # Actualizar stock en la sesión de carrito de invitados
+    cart = request.session.get('cart', {})
+    for product_id, item in cart.items():
+        product = Product.objects.get(id=product_id)
+        print(f"Stock antes de actualizar para {product.name}: {product.stock}")
+        product.stock -= item['quantity']
+        product.save()
+        print(f"Stock después de actualizar para {product.name}: {product.stock}")
 
+    # Vaciar el carrito de la sesión
     if 'cart' in request.session:
         del request.session['cart']
 
@@ -563,9 +547,6 @@ def success_guest_view(request):
         'name': name,
         'address': address,
     })
-
-
-
 
 
 # API para obtener el listado de productos

@@ -195,7 +195,6 @@
             margin-top: 5px;
             padding: 8px 15px;
             background-color: #e74c3c;
-            /* Botón rojo */
             color: #fff;
             text-decoration: none;
             border-radius: 5px;
@@ -205,7 +204,6 @@
 
         .clear-filter:hover {
             background-color: #c0392b;
-            /* Más oscuro en hover */
         }
 
         .filter-title {
@@ -255,19 +253,18 @@
             <h1>Catálogo de Productos</h1>
         </div>
         <div class="header-buttons">
-            <a href="{% if user.is_authenticated %}{% url 'cart' %}{% else %}{% url 'cart_guest' %}{% endif %}">
-                Ver mi cesta
-            </a>
+            <a href="{% if user.is_authenticated %}{% url 'cart' %}{% else %}{% url 'cart_guest' %}{% endif %}">Ver mi
+                cesta</a>
             {% if total_items > 0 %}
-                <span class="cart-count">{{ total_items }}</span>
+            <span class="cart-count">{{ total_items }}</span>
             {% endif %}
-        </div>      
+        </div>
         <div class="header-buttons">
             {% if user.is_authenticated %}
-                <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a>
+            <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a>
             {% else %}
-                <a href="{% url 'registro' %}">Registrarse</a>
-                <a href="{% url 'login' %}">Iniciar sesión</a>
+            <a href="{% url 'registro' %}">Registrarse</a>
+            <a href="{% url 'login' %}">Iniciar sesión</a>
             {% endif %}
         </div>
     </div>
@@ -286,14 +283,14 @@
             <h3>Categorías</h3>
             <ul>
                 {% for categoria in categorias %}
-                    <li><a href="{% url 'filtrar_por_categoria' categoria.id %}">{{ categoria.name }}</a></li>
+                <li><a href="{% url 'filtrar_por_categoria' categoria.id %}">{{ categoria.name }}</a></li>
                 {% endfor %}
             </ul>
 
             <h3>Fabricantes</h3>
             <ul>
                 {% for fabricante in fabricantes %}
-                    <li><a href="{% url 'filtrar_por_fabricante' fabricante.id %}">{{ fabricante.name }}</a></li>
+                <li><a href="{% url 'filtrar_por_fabricante' fabricante.id %}">{{ fabricante.name }}</a></li>
                 {% endfor %}
             </ul>
         </div>
@@ -301,34 +298,39 @@
         <!-- Lista de productos filtrados -->
         <div>
             {% if filtro %}
-                <div class="active-filter">
-                    <p>{{ filtro }}</p>
-                    <a href="{% url 'catalogo' %}" class="clear-filter">Quitar filtro</a>
-                </div>
-            {% endif %}
-
-            {% if filtro %}
-            <h2 class="filter-title">{{ filtro }}</h2>
+            <div class="active-filter">
+                <p>{{ filtro }}</p>
+                <a href="{% url 'catalogo' %}" class="clear-filter">Quitar filtro</a>
+            </div>
             {% endif %}
 
             <div class="product-list">
                 {% for producto in productos %}
-                    <div class="product-item">
-                        {% if producto.image %}
-                            <img src="{{ producto.image.get_image_url }}" alt="{{ producto.name }}">
-                        {% else %}
-                            <img src="https://via.placeholder.com/200" alt="Imagen no disponible">
-                        {% endif %}
-                        <h2>{{ producto.name }}</h2>
-                        <p>{{ producto.description }}</p>
-                        <p class="price">${{ producto.price }}</p>
-                        <form action="{% if user.is_authenticated %}{% url 'add_to_cart' producto.id %}{% else %}{% url 'add_to_cart_guest' producto.id %}{% endif %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit">Añadir a la cesta</button>
-                        </form>
-                    </div>
+                <div class="product-item">
+                    {% if producto.image %}
+                    <img src="{{ producto.image.get_image_url }}" alt="{{ producto.name }}">
+                    {% else %}
+                    <img src="https://via.placeholder.com/200" alt="Imagen no disponible">
+                    {% endif %}
+                    <h2>{{ producto.name }}</h2>
+                    <p>{{ producto.description }}</p>
+                    <p class="price">${{ producto.price }}</p>
+                    <p class="stock">Stock: {{ producto.stock }}</p>
+
+                    {% if producto.stock > 0 %}
+                    <form
+                        action="{% if user.is_authenticated %}{% url 'add_to_cart' producto.id %}{% else %}{% url 'add_to_cart_guest' producto.id %}{% endif %}"
+                        method="post">
+                        {% csrf_token %}
+                        <button type="submit">Añadir a la cesta</button>
+                    </form>
+                    {% else %}
+                    <p style="color: red; font-weight: bold;">Producto Agotado</p>
+                    {% endif %}
+                </div>
+
                 {% empty %}
-                    <p>No hay productos disponibles.</p>
+                <p>No hay productos disponibles.</p>
                 {% endfor %}
             </div>
         </div>
