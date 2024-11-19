@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmación de Compra</title>
+</head>
+
+<body>
+    <h2>¡Gracias por tu compra, {{ name }}!</h2>
+    <p>Tu pedido será enviado a:</p>
+    <p>{{ address.line1 }}</p>
+    {% if address.line2 %}<p>{{ address.line2 }}</p>{% endif %}
+    <p>{{ address.city }}, {{ address.state }}</p>
+    <p>{{ address.postal_code }}, {{ address.country }}</p>
+
+    <h3>Detalles del Pedido</h3>
+    <p><strong>Número de Seguimiento:</strong> {{ order.track_number }}</p>
+    <p><strong>Total:</strong> €{{ order.total }}</p>
+
+    <a href="http://127.0.0.1:8000/track_order_guest/?track_number={{ order.track_number }}"
+        style="background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+        Estado del Pedido
+    </a>
+</body>
+
+</html>

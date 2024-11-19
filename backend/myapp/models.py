@@ -5,6 +5,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.conf import settings
+import mimetypes
 
 #Imagenes
 class BlobImage(models.Model):
@@ -19,7 +20,7 @@ class BlobImage(models.Model):
         with open(ruta_archivo, 'rb') as f:
             datos = f.read()
             self.content = datos
-            self.mime_type = guess_type(ruta_archivo)[0]
+            self.mime_type = mimetypes.guess_type(ruta_archivo)[0] or "application/octet-stream"
             self.file_name = os.path.basename(ruta_archivo)
             self.save()
 
@@ -63,6 +64,9 @@ class Cart(models.Model):
     def __str__(self):
         return f"Cart ({self.user})" if self.user else "Guest Cart"
 
+    def total_items(self):
+        return sum(item.quantity for item in self.item.all())
+
 #Elementos en la Cesta
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="item")
@@ -74,14 +78,25 @@ class CartItem(models.Model):
 
 #Pedido
 class Order(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    STATUS_CHOICES = [
+        ('Recibido', 'Recibido'),
+        ('En Proceso', 'En Proceso'),
+        ('Enviado', 'Enviado'),
+        ('Entregado', 'Entregado'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    session_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_address = models.TextField()
+    track_number = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Recibido')
 
     def __str__(self):
-        return f"Order ({self.id}) - {self.user.username}"
+        return f"Order {self.track_number} - Estado: {self.status}"
 
+    
 #Detalles de Pedido
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_items")
