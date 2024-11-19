@@ -35,6 +35,19 @@
             font-size: 1em;
             margin-bottom: 20px;
         }
+        .tracking-info {
+            font-size: 1.1em;
+            margin-top: 15px;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .tracking-info:hover {
+            background-color: #e0e0e0;
+        }
         .button {
             background-color: #27ae60;
             color: #fff;
@@ -44,11 +57,36 @@
             font-weight: bold;
             display: inline-block;
             transition: background-color 0.3s;
+            margin-top: 20px;
         }
         .button:hover {
             background-color: #1e874b;
         }
+        .copy-icon {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .tracking-info {
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
     </style>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Código copiado al portapapeles');
+            }, () => {
+                alert('Error al copiar el código');
+            });
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -60,7 +98,16 @@
             <p>{{ address.postal_code }}, {{ address.city }}, {{ address.state }}</p>
             <p>{{ address.country }}</p>
         </div>
-        <a href="{% url 'catalogo' %}" class="button">Volver al Catálogo</a>
+        <div class="message">Este es el código de seguimiento de tu pedido:</div>
+        <p>Copie el código y guárdelo en un lugar seguro para poder ver el estado en el que se encuentra su pedido próximamente.</p>
+        <div class="tracking-info" onclick="copyToClipboard('{{ track_number }}')">
+            {{ track_number }}
+            <span class="copy-icon">📋</span>
+        </div>
+        <div class="button-container">
+            <a href="{% url 'catalogo' %}" class="button">Volver al Catálogo</a>
+            <a href="{% url 'track_order_guest' %}" class="button">Estado del Pedido</a>
+        </div>
     </div>
 </body>
 </html>

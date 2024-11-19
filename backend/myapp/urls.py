@@ -33,5 +33,6 @@ urlpatterns = [
      path('increase_quantity_guest/<int:product_id>/', views.increase_cart_quantity_guest, name='increase_quantity_guest'),
     path('decrease_quantity_guest/<int:product_id>/', views.decrease_cart_quantity_guest, name='decrease_quantity_guest'),
     path('initiate_checkout_guest/', views.initiate_checkout_guest, name='initiate_checkout_guest'),
+    path('track_order_guest/', views.track_order_guest, name='track_order_guest'),
     path('success_guest/', views.success_guest_view, name='success_guest'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
