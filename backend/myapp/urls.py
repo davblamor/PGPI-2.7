@@ -37,4 +37,4 @@ urlpatterns = [
     path('success_guest/', views.success_guest_view, name='success_guest'),
     path('track_order/', views.track_order, name='track_order'),
     path('initiate_checkout/', views.initiate_checkout, name='initiate_checkout'),
-] # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
