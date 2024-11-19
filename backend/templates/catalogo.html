@@ -258,6 +258,7 @@
             {% if total_items > 0 %}
             <span class="cart-count">{{ total_items }}</span>
             {% endif %}
+            <a href="{% url 'track_order_guest' %}" class="track-order-button">Seguir mi pedido</a>
         </div>
         <div class="header-buttons">
             {% if user.is_authenticated %}
@@ -314,7 +315,7 @@
                     {% endif %}
                     <h2>{{ producto.name }}</h2>
                     <p>{{ producto.description }}</p>
-                    <p class="price">${{ producto.price }}</p>
+                    <p class="price">€{{ producto.price }}</p>
                     <p class="stock">Stock: {{ producto.stock }}</p>
 
                     {% if producto.stock > 0 %}

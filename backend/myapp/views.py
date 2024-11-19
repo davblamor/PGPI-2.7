@@ -160,11 +160,9 @@ def add_to_cart(request, product_id):
 # Vista del carrito de compras
 @login_required
 def cart(request):
-    # Get or create the cart for the current user
     cart_obj, created = Cart.objects.get_or_create(user=request.user)
     cart_items = cart_obj.item.all()
 
-    # Calculate total items and total price
     total_items = sum(item.quantity for item in cart_items)
     total_price = sum(item.product.price * item.quantity for item in cart_items)
 
@@ -180,7 +178,6 @@ def cart(request):
         stripe.api_key = settings.STRIPE_SECRET_KEY
         YOUR_DOMAIN = "http://127.0.0.1:8000"  # Replace with your deployed domain
 
-        # Create line items for Stripe Checkout
         line_items = [
             {
                 'price_data': {
@@ -195,7 +192,6 @@ def cart(request):
             for item in cart_items
         ]
 
-        # Create the Stripe Checkout session
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=line_items,
@@ -302,13 +298,122 @@ class StripeCheckoutSessionView(View):
             return JsonResponse({'id': checkout_session.id})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+        
+@login_required
+def initiate_checkout(request):
+    cart = Cart.objects.filter(user=request.user).first()
+    if not cart or not cart.item.exists():
+        return redirect('cart')
+
+    productos_no_existentes = []
+    for item in cart.item.all():
+        if item.product.stock < item.quantity:
+            productos_no_existentes.append(item.product.name)
+
+    if productos_no_existentes:
+        return render(request, 'checkout_error.html', {
+            'error': f'Los siguientes productos no tienen suficiente stock: {", ".join(productos_no_existentes)}. Por favor, actualiza tu carrito.'
+        })
+
+    total = sum(item.product.price * item.quantity for item in cart.item.all())
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    YOUR_DOMAIN = "http://127.0.0.1:8000"  # Reemplaza con tu dominio
+
+    line_items = [
+        {
+            'price_data': {
+                'currency': 'eur',
+                'product_data': {
+                    'name': item.product.name,
+                },
+                'unit_amount': int(item.product.price * 100),  # Convertir a centavos
+            },
+            'quantity': item.quantity,
+        }
+        for item in cart.item.all()
+    ]
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url=YOUR_DOMAIN + '/success/?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=YOUR_DOMAIN + '/cart/',
+            shipping_address_collection={
+                'allowed_countries': ['US', 'CA', 'ES']
+            },
+            shipping_options=[
+                {
+                    'shipping_rate_data': {
+                        'type': 'fixed_amount',
+                        'fixed_amount': {'amount': 500, 'currency': 'eur'},
+                        'display_name': 'Standard shipping',
+                        'delivery_estimate': {
+                            'minimum': {'unit': 'business_day', 'value': 5},
+                            'maximum': {'unit': 'business_day', 'value': 7},
+                        },
+                    },
+                },
+                {
+                    'shipping_rate_data': {
+                        'type': 'fixed_amount',
+                        'fixed_amount': {'amount': 1500, 'currency': 'eur'},
+                        'display_name': 'Express shipping',
+                        'delivery_estimate': {
+                            'minimum': {'unit': 'business_day', 'value': 1},
+                            'maximum': {'unit': 'business_day', 'value': 3},
+                        },
+                    },
+                },
+            ],
+        )
+
+        track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
+
+        order = Order.objects.create(
+            user=request.user,
+            session_id=checkout_session.id,
+            total=total,
+            delivery_address="Pendiente de ser completada",
+            track_number=track_number,
+            status='Recibido'
+        )
+
+        for item in cart.item.all():
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price
+            )
+
+        return redirect(checkout_session.url, code=303)
+
+    except stripe.error.StripeError as e:
+        return render(request, 'checkout_error.html', {'error': str(e)})
 
 
-# Success view
+@login_required
+def track_order(request):
+    if request.method == 'POST':
+        track_number = request.POST.get('track_number')
+
+        try:
+            order = Order.objects.get(user=request.user, track_number=track_number)
+            return render(request, 'track_order.html', {'order': order})
+        except Order.DoesNotExist:
+            return render(request, 'track_order.html', {'error': 'No se encontró ningún pedido con ese código de seguimiento.'})
+
+    return render(request, 'track_order.html')
+
+
+
 @login_required
 def success_view(request):
-    print("Ejecutando success_view...")
-    # Default values for name and address
+    session_id = request.GET.get('session_id')
+
     name = "Cliente"
     address = {
         "line1": "No disponible",
@@ -318,17 +423,15 @@ def success_view(request):
         "postal_code": "No disponible",
         "country": "No disponible",
     }
-
-    # Retrieve the session ID from the query parameters
-    session_id = request.GET.get('session_id')
+    track_number = "No disponible" 
 
     if session_id:
         try:
             session = stripe.checkout.Session.retrieve(session_id, expand=['shipping_details'])
-            shipping_details = session.get('shipping_details', {})
+            shipping_details = session.get('shipping_details')
             if shipping_details:
+                name = shipping_details.get('name', "Cliente")
                 address_obj = shipping_details.get('address', {})
-                name = shipping_details.get('name', name)
                 address = {
                     "line1": address_obj.get('line1', "No disponible"),
                     "line2": address_obj.get('line2', ""),
@@ -337,12 +440,20 @@ def success_view(request):
                     "postal_code": address_obj.get('postal_code', "No disponible"),
                     "country": address_obj.get('country', "No disponible"),
                 }
+
+           
+            try:
+                order = Order.objects.get(session_id=session_id, user=request.user)
+                track_number = order.track_number  
+            except Order.DoesNotExist:
+                track_number = "No disponible"
+                print("Orden no encontrada.")
+
         except stripe.error.StripeError as e:
             print(f"Stripe error: {e}")
         except Exception as e:
             print(f"Error retrieving Stripe session: {e}")
 
-    # Clear the user's cart and update product stock
     cart = Cart.objects.filter(user=request.user).first()
     if cart:
         for item in cart.item.all():
@@ -354,6 +465,7 @@ def success_view(request):
     return render(request, 'success.html', {
         'name': name,
         'address': address,
+        'track_number': track_number,  
     })
 
 # Incrementar la cantidad de un producto en el carrito
@@ -439,7 +551,7 @@ def initiate_checkout_guest(request):
     total = sum(item['price'] * item['quantity'] for item in cart.values())
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    YOUR_DOMAIN = "http://127.0.0.1:8000"  # Reemplaza con tu dominio
+    YOUR_DOMAIN = "http://127.0.0.1:8000"  
 
     line_items = [
         {
@@ -448,7 +560,7 @@ def initiate_checkout_guest(request):
                 'product_data': {
                     'name': item['name'],
                 },
-                'unit_amount': int(item['price'] * 100),  # Convertir a centavos
+                'unit_amount': int(item['price'] * 100),  
             },
             'quantity': item['quantity'],
         }
@@ -492,7 +604,6 @@ def initiate_checkout_guest(request):
         )
 
         track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
-        print(f"Número de seguimiento generado: {track_number}") 
 
         order = Order.objects.create(
             session_id=checkout_session.id,
