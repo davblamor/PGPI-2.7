@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pago Exitoso</title>
+    <title>Compra Exitosa</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f6f8;
-            color: #333;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            color: #333;
         }
         .container {
             max-width: 600px;
@@ -24,59 +24,90 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-        .success-message {
-            font-size: 28px;
-            font-weight: bold;
+        .header {
+            font-size: 2em;
             color: #28a745;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 1.2em;
+            margin-bottom: 15px;
         }
         .details {
-            font-size: 18px;
-            color: #555;
+            color: #666;
+            font-size: 1em;
             margin-bottom: 20px;
         }
-        .address {
-            text-align: left;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            margin-bottom: 20px;
-        }
-        .address p {
-            margin: 5px 0;
-        }
-        .home-link {
-            display: inline-block;
-            padding: 12px 25px;
-            color: #ffffff;
-            background-color: #007bff;
-            text-decoration: none;
+        .tracking-info {
+            font-size: 1.1em;
+            background-color: #f1f1f1;
+            padding: 10px;
             border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background-color 0.3s;
+            display: inline-block;
+            cursor: pointer;
+            margin-bottom: 20px;
+            margin-top: 15px;
         }
-        .home-link:hover {
-            background-color: #0056b3;
+        .tracking-info:hover {
+            background-color: #e0e0e0;
+        }
+        .button {
+            background-color: #28a745;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+        .button:hover {
+            background-color: #218838;
+        }
+        .copy-icon {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
     </style>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Código copiado al portapapeles');
+            }, () => {
+                alert('Error al copiar el código');
+            });
+        }
+    </script>
 </head>
 <body>
     <div class="container">
-        <div class="success-message">¡Pago realizado con éxito!</div>
-        <div class="details">Gracias por tu compra, {{ name }}.</div>
-        <div class="details">Tu pedido será enviado a:</div>
-        <div class="address">
+        <div class="header">¡Compra Exitosa!</div>
+        <div class="message">Gracias por tu compra, {{ name }}.</div>
+        <div class="details">
+            <p>Dirección de envío:</p>
             <p>{{ address.line1 }}</p>
             {% if address.line2 %}
                 <p>{{ address.line2 }}</p>
             {% endif %}
-            <p>{{ address.city }}, {{ address.state }}</p>
-            <p>{{ address.postal_code }}</p>
+            <p>{{ address.postal_code }}, {{ address.city }}, {{ address.state }}</p>
             <p>{{ address.country }}</p>
         </div>
-        <a href="{% url 'catalogo' %}" class="home-link">Volver al catálogo</a>
+        <div class="message">Este es el código de seguimiento de tu pedido:</div>
+        <p>Copie el código y guárdelo en un lugar seguro para poder ver el estado en el que se encuentra su pedido próximamente.</p>
+        <div class="tracking-info" onclick="copyToClipboard('{{ track_number }}')">
+            {{ track_number }}
+            <span class="copy-icon">📋</span>
+        </div>
+        <div class="button-container">
+            <a href="{% url 'catalogo' %}" class="button">Volver al Catálogo</a>
+            <a href="{% url 'track_order_guest' %}" class="button">Estado del Pedido</a>
+        </div>
     </div>
 </body>
 </html>

@@ -78,14 +78,25 @@ class CartItem(models.Model):
 
 #Pedido
 class Order(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    STATUS_CHOICES = [
+        ('Recibido', 'Recibido'),
+        ('En Proceso', 'En Proceso'),
+        ('Enviado', 'Enviado'),
+        ('Entregado', 'Entregado'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    session_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_address = models.TextField()
+    track_number = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Recibido')
 
     def __str__(self):
-        return f"Order ({self.id}) - {self.user.username}"
+        return f"Order {self.track_number} - Estado: {self.status}"
 
+    
 #Detalles de Pedido
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_items")

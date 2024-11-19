@@ -143,15 +143,15 @@
                                 <span class="quantity-number">{{ item.quantity }}</span>
                                 <a href="{% url 'increase_quantity_guest' item.product_id %}">+</a>
                             </div>
-                            <p>Precio unitario: ${{ item.price }}</p>
+                            <p>Precio unitario: €{{ item.price }}</p>
                         </div>
-                        <p>Total: ${{ item.total_price }}</p>
+                        <p>Total: €{{ item.total_price }}</p>
                     </div>
                 {% endfor %}
             </div>
             <div class="total-info">
                 <p>Total de artículos: {{ total_items }}</p>
-                <p>Precio total: ${{ total_price }}</p>
+                <p>Precio total: €{{ total_price }}</p>
             </div>
             <div class="cart-actions">
                 <a href="{% url 'catalogo' %}">Seguir comprando</a>
