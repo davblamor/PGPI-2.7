@@ -77,3 +77,155 @@ body {
     color: #5cb85c;
     text-decoration: none;
 }
+
+/* Navbar */
+.header {
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+.header-buttons {
+    flex-grow: 1;
+    text-align: right;
+    padding-right: 20px;
+}
+
+.header-buttons p {
+    margin: 0;
+    color: white;
+    font-size: 1em;
+    font-weight: bold;
+    text-align: right;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.header img.logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+.header h1.title {
+    margin: 0;
+    font-size: 1.5em;
+    color: white;
+}
+
+
+/* Contenedor de perfil */
+.profile-container {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    margin: 20px auto;
+}
+
+.profile-container h2 {
+    color: #333;
+    font-size: 24px;
+}
+
+.profile-info p {
+    color: #555;
+    margin: 10px 0;
+}
+
+/* PARA EL PERFIL */
+.button-logout {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff; /* Azul */
+    color: #ffffff; /* Texto blanco */
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.button-logout:hover {
+    background-color: #0056b3; /* Azul más oscuro */
+}
+
+/* Botón de catálogo */
+.catalog-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.catalog-button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos del modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.button-logout-confirm {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.button-logout-confirm:hover {
+    background-color: #0056b3;
+}
+
+.button-cancel {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.button-cancel:hover {
+    background-color: #cc0000;
+}
