@@ -427,7 +427,7 @@ def initiate_checkout_guest(request):
     ]
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    YOUR_DOMAIN = "http://127.0.0.1:8000"  # Reemplaza con tu dominio
+    YOUR_DOMAIN = "http://127.0.0.1:8000"
 
     line_items = [
         {
@@ -487,7 +487,7 @@ def increase_cart_quantity_guest(request, product_id):
     
     if str(product_id) in cart:
         cart[str(product_id)]['quantity'] += 1
-        request.session['cart'] = cart  # Actualiza el carrito en la sesión
+        request.session['cart'] = cart
 
     return redirect('cart_guest')
 
@@ -499,32 +499,32 @@ def decrease_cart_quantity_guest(request, product_id):
         if cart[str(product_id)]['quantity'] > 1:
             cart[str(product_id)]['quantity'] -= 1
         else:
-            del cart[str(product_id)]  # Elimina el producto si la cantidad llega a 0
-        request.session['cart'] = cart  # Actualiza el carrito en la sesión
+            del cart[str(product_id)]
+        request.session['cart'] = cart
 
     return redirect('cart_guest')
 
 def success_guest_view(request):
-    # Recuperar el session_id de la URL
     session_id = request.GET.get('session_id')
 
     if session_id:
         try:
-            # Obtener la sesión de Stripe y expandir los detalles de envío
             session = stripe.checkout.Session.retrieve(session_id, expand=['shipping', 'payment_intent'])
-            print("Contenido de la sesión de Stripe:", session)  # Agrega esta línea para depurar
 
-            shipping_details = session.get('shipping', {})
+            shipping_details = session.get('shipping_details')
             if shipping_details:
                 name = shipping_details.get('name', "Cliente")
-                address = shipping_details.get('address', {
-                    "line1": "No disponible",
-                    "line2": "",
-                    "city": "No disponible",
-                    "state": "No disponible",
-                    "postal_code": "No disponible",
-                    "country": "No disponible",
-                })
+                address = shipping_details.get('address', {})
+
+                address = {
+                    "line1": address.get('line1', "No disponible"),
+                    "line2": address.get('line2', ""),
+                    "city": address.get('city', "No disponible"),
+                    "state": address.get('state', "No disponible"),
+                    "postal_code": address.get('postal_code', "No disponible"),
+                    "country": address.get('country', "No disponible"),
+                }
+
             else:
                 name = "Cliente"
                 address = {
@@ -536,7 +536,6 @@ def success_guest_view(request):
                     "country": "No disponible",
                 }
         except stripe.error.StripeError as e:
-            print(f"Stripe error: {e}")
             name = "Cliente"
             address = {
                 "line1": "No disponible",
@@ -547,7 +546,6 @@ def success_guest_view(request):
                 "country": "No disponible",
             }
         except Exception as e:
-            print(f"Error retrieving Stripe session: {e}")
             name = "Cliente"
             address = {
                 "line1": "No disponible",
@@ -558,7 +556,6 @@ def success_guest_view(request):
                 "country": "No disponible",
             }
 
-    # Limpiar el carrito de la sesión
     if 'cart' in request.session:
         del request.session['cart']
 
