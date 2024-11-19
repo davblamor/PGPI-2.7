@@ -512,7 +512,6 @@ def success_guest_view(request):
         try:
             # Obtener la sesión de Stripe y expandir los detalles de envío
             session = stripe.checkout.Session.retrieve(session_id, expand=['shipping', 'payment_intent'])
-            print("Contenido de la sesión de Stripe:", session)  # Agrega esta línea para depurar
 
             shipping_details = session.get('shipping', {})
             if shipping_details:
