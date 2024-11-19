@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmación de tu Pedido</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #27ae60;
+        }
+        .order-item {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gracias por tu compra, {{ order.user.first_name }}!</h1>
+        <p>Tu pedido con ID <strong>{{ order.id }}</strong> ha sido recibido.</p>
+
+        <h2>Detalles del pedido:</h2>
+        <ul>
+            {% for item in order.order_items.all %}
+                <li class="order-item">
+                    {{ item.quantity }} x {{ item.product.name }} - ${{ item.price }}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <p><strong>Total:</strong> ${{ order.total }}</p>
+        <p>Dirección de entrega: {{ order.delivery_address }}</p>
+        <p>Gracias por comprar con nosotros.</p>
+    </div>
+</body>
+</html>

@@ -22,4 +22,5 @@ urlpatterns = [
     path('cart/', views.cart, name='cart'),
     path('increase_quantity/<int:cart_item_id>/', views.increase_cart_quantity, name='increase_quantity'),
     path('decrease_quantity/<int:cart_item_id>/', views.decrease_cart_quantity, name='decrease_quantity'),
+    path('finalizar_compra/', views.finalizar_compra, name='finalizar_compra'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

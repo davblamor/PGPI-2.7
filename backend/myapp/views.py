@@ -18,6 +18,11 @@ from django.utils.html import strip_tags
 from django.db.models import Q
 from .forms import RegistrationForm, LoginForm
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
+from myapp.models import Order, OrderItem, Cart
 
 # Vista principal
 def index(request: HttpRequest) -> HttpResponse:
@@ -173,6 +178,49 @@ def decrease_cart_quantity(request, cart_item_id):
     else:
         cart_item.delete()
     return redirect('cart')
+
+def finalizar_compra(request):
+    cart = Cart.objects.filter(user=request.user).first()
+
+    if not cart or not cart.item.exists():
+        messages.error(request, "Tu carrito está vacío.")
+        return redirect('cart')
+
+    # Crear el pedido
+    order = Order.objects.create(
+        user=request.user,
+        total=sum(item.product.price * item.quantity for item in cart.item.all()),
+        delivery_address="Dirección de entrega predeterminada"  # Ajusta según tu modelo
+    )
+
+    # Crear los detalles del pedido
+    for item in cart.item.all():
+        OrderItem.objects.create(
+            order=order,
+            product=item.product,
+            quantity=item.quantity,
+            price=item.product.price
+        )
+
+    # Vaciar el carrito
+    cart.item.all().delete()
+
+    # Enviar el correo electrónico
+    subject = "Confirmación de tu pedido"
+    html_message = render_to_string('email_confirmacion_pedido.html', {'order': order})
+    plain_message = strip_tags(html_message)
+    recipient_email = request.user.email
+
+    send_mail(
+        subject,
+        plain_message,
+        settings.DEFAULT_FROM_EMAIL,
+        [recipient_email],
+        html_message=html_message
+    )
+
+    messages.success(request, "Tu pedido ha sido realizado y se ha enviado un correo de confirmación.")
+    return redirect('catalogo')
 
 # API para obtener el listado de productos
 class ProductListAPIView(generics.ListAPIView):
