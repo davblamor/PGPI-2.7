@@ -16,8 +16,6 @@ from django.db.models import Q
 from django.views import View
 import stripe
 from django.conf import settings
-from django.shortcuts import render
-import stripe
 import uuid
 
 from myapp.models import Product, Category, Manufacturer, Cart, CartItem, Order, OrderItem
@@ -25,6 +23,11 @@ from myapp.serializer import ProductSerializer
 from .forms import RegistrationForm, LoginForm
 from django.contrib import messages
 
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+from PGPIProject import settings
 
 # Configure Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -423,36 +426,33 @@ def success_view(request):
         "postal_code": "No disponible",
         "country": "No disponible",
     }
-    track_number = "No disponible" 
+    track_number = "No disponible"
 
     if session_id:
         try:
-            session = stripe.checkout.Session.retrieve(session_id, expand=['shipping_details'])
-            shipping_details = session.get('shipping_details')
-            if shipping_details:
-                name = shipping_details.get('name', "Cliente")
-                address_obj = shipping_details.get('address', {})
-                address = {
-                    "line1": address_obj.get('line1', "No disponible"),
-                    "line2": address_obj.get('line2', ""),
-                    "city": address_obj.get('city', "No disponible"),
-                    "state": address_obj.get('state', "No disponible"),
-                    "postal_code": address_obj.get('postal_code', "No disponible"),
-                    "country": address_obj.get('country', "No disponible"),
-                }
+            session = stripe.checkout.Session.retrieve(session_id, expand=['shipping_details', 'customer_details'])
+            shipping_details = session.get('shipping_details', {})
+            email = session.customer_details.email  # Correo del cliente desde Stripe
+            name = shipping_details.get('name', "Cliente")
+            address_obj = shipping_details.get('address', {})
+            address = {
+                "line1": address_obj.get('line1', "No disponible"),
+                "line2": address_obj.get('line2', ""),
+                "city": address_obj.get('city', "No disponible"),
+                "state": address_obj.get('state', "No disponible"),
+                "postal_code": address_obj.get('postal_code', "No disponible"),
+                "country": address_obj.get('country', "No disponible"),
+            }
 
-           
-            try:
-                order = Order.objects.get(session_id=session_id, user=request.user)
-                track_number = order.track_number  
-            except Order.DoesNotExist:
-                track_number = "No disponible"
-                print("Orden no encontrada.")
+            # Obtener la orden vinculada al session_id
+            order = Order.objects.get(session_id=session_id, user=request.user)
+            track_number = order.track_number
 
-        except stripe.error.StripeError as e:
-            print(f"Stripe error: {e}")
+            # Enviar correo de confirmación
+            enviar_correo_confirmacion(order, email, name, address)
+
         except Exception as e:
-            print(f"Error retrieving Stripe session: {e}")
+            print(f"Error: {e}")
 
     cart = Cart.objects.filter(user=request.user).first()
     if cart:
@@ -465,7 +465,7 @@ def success_view(request):
     return render(request, 'success.html', {
         'name': name,
         'address': address,
-        'track_number': track_number,  
+        'track_number': track_number,
     })
 
 # Incrementar la cantidad de un producto en el carrito
@@ -670,43 +670,39 @@ def success_guest_view(request):
         "postal_code": "No disponible",
         "country": "No disponible",
     }
-    track_number = "No disponible" 
+    track_number = "No disponible"
 
     if session_id:
         try:
-            session = stripe.checkout.Session.retrieve(session_id, expand=['shipping', 'payment_intent'])
+            session = stripe.checkout.Session.retrieve(session_id, expand=['shipping_details', 'customer_details'])
+            shipping_details = session.get('shipping_details', {})
+            email = session.customer_details.email  # Correo del cliente desde Stripe
+            name = shipping_details.get('name', "Cliente")
+            address_obj = shipping_details.get('address', {})
+            address = {
+                "line1": address_obj.get('line1', "No disponible"),
+                "line2": address_obj.get('line2', ""),
+                "city": address_obj.get('city', "No disponible"),
+                "state": address_obj.get('state', "No disponible"),
+                "postal_code": address_obj.get('postal_code', "No disponible"),
+                "country": address_obj.get('country', "No disponible"),
+            }
 
-            shipping_details = session.get('shipping_details')
-            if shipping_details:
-                name = shipping_details.get('name', "Cliente")
-                address = shipping_details.get('address', {})
-                address = {
-                    "line1": address.get('line1', "No disponible"),
-                    "line2": address.get('line2', ""),
-                    "city": address.get('city', "No disponible"),
-                    "state": address.get('state', "No disponible"),
-                    "postal_code": address.get('postal_code', "No disponible"),
-                    "country": address.get('country', "No disponible"),
-                }
+            # Obtener la orden vinculada al session_id
+            order = Order.objects.get(session_id=session_id)
+            track_number = order.track_number
 
-            try:
-                order = Order.objects.get(session_id=session_id)
-                track_number = order.track_number
-            except Order.DoesNotExist:
-                track_number = "No disponible"
+            # Enviar correo de confirmación
+            enviar_correo_confirmacion(order, email, name, address)
 
-        except stripe.error.StripeError as e:
-            print(f"Stripe error: {e}")
         except Exception as e:
-            print(f"Error retrieving Stripe session: {e}")
-    
+            print(f"Error: {e}")
+
     cart = request.session.get('cart', {})
     for product_id, item in cart.items():
         product = Product.objects.get(id=product_id)
-        print(f"Stock antes de actualizar para {product.name}: {product.stock}")
         product.stock -= item['quantity']
         product.save()
-        print(f"Stock después de actualizar para {product.name}: {product.stock}")
 
     # Vaciar el carrito de la sesión
     if 'cart' in request.session:
@@ -715,8 +711,9 @@ def success_guest_view(request):
     return render(request, 'success_guest.html', {
         'name': name,
         'address': address,
-        'track_number': track_number, 
+        'track_number': track_number,
     })
+
 
 def create_order_guest(session_id, total, delivery_address):
     track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
@@ -729,6 +726,24 @@ def create_order_guest(session_id, total, delivery_address):
     )
     return order
 
+def enviar_correo_confirmacion(order, email, name, address):
+    # Renderiza la plantilla de correo electrónico
+    subject = 'Confirmación de Compra'
+    html_message = render_to_string('email_confirmation.html', {
+        'name': name,
+        'address': address,
+        'order': order,
+    })
+    plain_message = strip_tags(html_message)
+
+    # Envía el correo
+    send_mail(
+        subject,
+        plain_message,
+        settings.EMAIL_HOST_USER,
+        [email],
+        html_message=html_message,
+    )
 
 # API para obtener el listado de productos
 class ProductListAPIView(generics.ListAPIView):
@@ -761,3 +776,4 @@ class ProductDetailView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        
