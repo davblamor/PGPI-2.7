@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from myapp.models import Product, Category, Manufacturer, Cart, CartItem, Order, OrderItem
 from django.contrib.auth import get_user_model
-
+from django.core import mail
 
 class CatalogoTests(TestCase):
     def setUp(self):
@@ -125,3 +125,44 @@ class CatalogoTests(TestCase):
 
         self.assertFalse('_auth_user_id' in self.client.session)
 
+class IntegrationTests(TestCase):
+    def setUp(self):
+        self.category = Category.objects.create(name="Electrodomésticos", description="Categoría general")
+        self.manufacturer = Manufacturer.objects.create(name="Samsung", description="Fabricante")
+        self.product = Product.objects.create(
+            name="Aspiradora",
+            description="Aspiradora potente",
+            price=200.00,
+            stock=5,
+            category=self.category,
+            manufacturer=self.manufacturer
+        )
+        User = get_user_model()
+        self.user = User.objects.create_user(email="buyer@django.com", password="password123")
+
+    '''def test_complete_purchase_flow(self):
+        self.client.login(email="buyer@django.com", password="password123")
+
+        response = self.client.post(reverse('add_to_cart', args=[self.product.id]), {'quantity': 2})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(CartItem.objects.filter(product=self.product, quantity=2).exists())
+
+        response = self.client.post(reverse('checkout'))
+        self.assertEqual(response.status_code, 302)
+
+        order = Order.objects.get(user=self.user)
+        self.assertEqual(order.items.count(), 1)
+        self.assertEqual(order.items.first().product, self.product)
+        self.assertEqual(order.items.first().quantity, 2)
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 3)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Detalles de tu compra", mail.outbox[0].subject)
+        self.assertIn(self.user.email, mail.outbox[0].to)'''
+
+    def test_guest_cannot_purchase(self):
+        response = self.client.post(reverse('add_to_cart', args=[self.product.id]), {'quantity': 1})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(CartItem.objects.filter(product=self.product).exists())
