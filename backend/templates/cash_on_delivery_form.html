@@ -1,0 +1,8 @@
+<form method="POST" action="{% url 'finalize_cash_on_delivery' %}">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Full Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="text" name="phone" placeholder="Phone Number" required>
+    <input type="text" name="address" placeholder="Delivery Address" required>
+    <button type="submit">Finalize Purchase</button>
+</form>

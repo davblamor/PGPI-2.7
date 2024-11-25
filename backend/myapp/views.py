@@ -497,7 +497,7 @@ def add_to_cart_guest(request, product_id):
     else:
         cart[str(product_id)] = {
             'name': product.name,
-            'price': float(product.price),  # Convertimos Decimal a float
+            'price': float(product.price),
             'quantity': 1,
         }
 
@@ -744,6 +744,74 @@ def enviar_correo_confirmacion(order, email, name, address):
         [email],
         html_message=html_message,
     )
+    
+@login_required
+def cash_on_delivery_form(request):
+    if request.method == 'GET':
+        return render(request, 'cash_on_delivery_form.html')
+    
+    
+@login_required
+def finalize_cash_on_delivery(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+
+        if not all([name, email, phone, address]):
+            return render(request, 'error.html', {
+                'error': 'Todos los campos son obligatorios para completar el pedido.'
+            })
+
+        cart = Cart.objects.filter(user=request.user).first()
+        if not cart or not cart.item.exists():
+            return render(request, 'error.html', {
+                'error': 'Tu carrito está vacío. Añade productos antes de finalizar la compra.'
+            })
+
+        cart_items = cart.item.all()
+        total_price = sum(item.product.price * item.quantity for item in cart_items)
+
+        track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
+
+        order = Order.objects.create(
+            user=request.user,
+            total=total_price,
+            delivery_address=address,
+            track_number=track_number,
+            status='Recibido',
+        )
+
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price
+            )
+
+        cart_items.delete()
+
+        return render(request, 'success.html', {
+            'track_number': track_number,
+            'name': name,
+            'address': {
+                "line1": address,
+                "line2": "",
+                "city": "No especificada",
+                "state": "No especificado",
+                "postal_code": "No especificado",
+                "country": "No especificado"
+            }
+        })
+
+    return render(request, 'error.html', {
+        'error': 'Método de solicitud no permitido.'
+    })
+
+
+
 
 # API para obtener el listado de productos
 class ProductListAPIView(generics.ListAPIView):
