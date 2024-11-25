@@ -17,6 +17,7 @@ from django.views import View
 import stripe
 from django.conf import settings
 import uuid
+from decimal import Decimal
 
 from myapp.models import Product, Category, Manufacturer, Cart, CartItem, Order, OrderItem
 from myapp.serializer import ProductSerializer
@@ -750,7 +751,7 @@ def cash_on_delivery_form(request):
     if request.method == 'GET':
         return render(request, 'cash_on_delivery_form.html')
     
-    
+
 @login_required
 def finalize_cash_on_delivery(request):
     if request.method == 'POST':
@@ -758,8 +759,9 @@ def finalize_cash_on_delivery(request):
         email = request.POST.get('email')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
+        shipping_method = request.POST.get('shipping_method')
 
-        if not all([name, email, phone, address]):
+        if not all([name, email, phone, address, shipping_method]):
             return render(request, 'error.html', {
                 'error': 'Todos los campos son obligatorios para completar el pedido.'
             })
@@ -771,7 +773,13 @@ def finalize_cash_on_delivery(request):
             })
 
         cart_items = cart.item.all()
-        total_price = sum(item.product.price * item.quantity for item in cart_items)
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+
+        shipping_cost = Decimal('5.00')
+        if shipping_method == 'express':
+            shipping_cost = Decimal('15.00')
+
+        total_price = subtotal + shipping_cost
 
         track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
 
@@ -803,7 +811,11 @@ def finalize_cash_on_delivery(request):
                 "state": "No especificado",
                 "postal_code": "No especificado",
                 "country": "No especificado"
-            }
+            },
+            'cart_items': cart_items,
+            'subtotal': subtotal,
+            'shipping_cost': shipping_cost,
+            'total': total_price,
         })
 
     return render(request, 'error.html', {
@@ -811,6 +823,21 @@ def finalize_cash_on_delivery(request):
     })
 
 
+@login_required
+def cash_on_delivery_form(request):
+    cart = Cart.objects.filter(user=request.user).first()
+    if not cart or not cart.item.exists():
+        return render(request, 'error.html', {
+            'error': 'Tu carrito está vacío. Añade productos antes de finalizar la compra.'
+        })
+
+    cart_items = cart.item.all()
+    subtotal = sum(item.product.price * item.quantity for item in cart_items)
+
+    return render(request, 'cash_on_delivery_form.html', {
+        'cart_items': cart_items,
+        'subtotal': subtotal,
+    })
 
 
 # API para obtener el listado de productos
