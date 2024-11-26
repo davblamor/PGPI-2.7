@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago Contra Reembolso</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f6f9fc;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            max-width: 900px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 95%;
+        }
+        .summary {
+            flex: 1;
+            padding: 20px;
+            border-right: 1px solid #e6e6e6;
+        }
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #6366f1;
+            cursor: pointer;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        .back-button:hover {
+            color: #4f46e5;
+        }
+        .back-button svg {
+            margin-right: 5px;
+            width: 16px;
+            height: 16px;
+        }
+        .summary h2 {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #6b7280;
+        }
+        .summary .item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .summary .total {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .form-container {
+            flex: 2;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .form-container h2 {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #6b7280;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-label {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .form-input, .form-select {
+            width: 100%; 
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 4px rgba(99, 102, 241, 0.5);
+        }
+        .shipping-method {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background-color: #f9fafb;
+            margin-bottom: 20px;
+        }
+        .shipping-method label {
+            display: flex;
+            align-items: center;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .shipping-method input {
+            margin-right: 10px;
+        }
+        .button {
+            background-color: #6366f1;
+            color: #fff;
+            font-size: 1em;
+            font-weight: bold;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+        }
+        .button:hover {
+            background-color: #4f46e5;
+        }
+    </style>
+    <script>
+        function updateTotal(shippingCost) {
+            const subtotal = parseFloat(document.getElementById('subtotal').innerText);
+            document.getElementById('shipping-cost-display').innerText = shippingCost.toFixed(2);
+            const total = subtotal + parseFloat(shippingCost);
+            document.getElementById('total').innerText = total.toFixed(2);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Resumen del pedido -->
+        <div class="summary">
+            <a href="#" class="back-button" onclick="history.back()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Atrás
+            </a>
+            <h2>Resumen del Pedido</h2>
+            {% for item in cart_items %}
+            <div class="item">
+                <span>{{ item.name }} (x{{ item.quantity }})</span>
+                <span>€{{ item.price|floatformat:2 }}</span>
+            </div>
+            {% endfor %}
+            <div class="item">
+                <span>Subtotal</span>
+                <span>€<span id="subtotal">{{ subtotal|floatformat:2 }}</span></span>
+            </div>
+            <div class="item">
+                <span>Envío</span>
+                <span>€<span id="shipping-cost-display">5.00</span></span>
+            </div>
+            <div class="total">
+                <span>Total a pagar</span>
+                <span>€<span id="total">{{ subtotal|floatformat:2 }}</span></span>
+            </div>
+        </div>
+        <!-- Formulario -->
+        <div class="form-container">
+            <h2>Información de Envío</h2>
+            <form method="POST" action="{% url 'finalize_guest_cash_on_delivery' %}">
+                {% csrf_token %}
+                <!-- Email -->
+                <div class="form-group">
+                    <label class="form-label" for="email">Correo Electrónico</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                </div>
+                <!-- Dirección -->
+                <div class="form-group">
+                    <label class="form-label" for="name">Nombre Completo</label>
+                    <input type="text" id="name" name="name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="address">Dirección</label>
+                    <input type="text" id="address" name="address" class="form-input" placeholder="Calle, número, piso" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="city">Ciudad</label>
+                    <input type="text" id="city" name="city" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="postal_code">Código Postal</label>
+                    <input type="text" id="postal_code" name="postal_code" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Método de Envío</label>
+                    <div class="shipping-method">
+                        <label>
+                            <input type="radio" name="shipping_method" value="standard" checked onclick="updateTotal(5.00)">
+                            Envío Estándar (€5.00, 5-7 días hábiles)
+                        </label>
+                        <label>
+                            <input type="radio" name="shipping_method" value="express" onclick="updateTotal(15.00)">
+                            Envío Exprés (€15.00, 1-3 días hábiles)
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="button">Confirmar Pedido</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

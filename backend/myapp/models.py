@@ -84,6 +84,11 @@ class Order(models.Model):
         ('Enviado', 'Enviado'),
         ('Entregado', 'Entregado'),
     ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('Card', 'Card'),
+        ('Cash on Delivery', 'Cash on Delivery'),
+    ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     session_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
@@ -92,6 +97,11 @@ class Order(models.Model):
     delivery_address = models.TextField()
     track_number = models.CharField(max_length=255, unique=True, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Recibido')
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        default='Card'
+    )
 
     def __str__(self):
         return f"Order {self.track_number} - Estado: {self.status}"
