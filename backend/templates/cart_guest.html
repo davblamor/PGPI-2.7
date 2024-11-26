@@ -157,7 +157,7 @@
                 <a href="{% url 'catalogo' %}">Seguir comprando</a>
                 {% if total_items > 0 %}
                     <a href="{% url 'initiate_checkout_guest' %}" class="btn">Pago con Tarjeta</a>
-                    <a href="{% url 'guest_cash_on_delivery_form' %}" class="btn">Pago Contrareembolso</a>
+                    <a href="{% url 'guest_cash_on_delivery_form' %}" class="btn">Pago contra reembolso</a>
                 {% else %}
                     <button disabled>Carrito vacío</button>
                 {% endif %}
