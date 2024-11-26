@@ -1,14 +1,21 @@
+# Use Python 3.11 as the base image
 FROM python:3.11-slim
 
+# Set the working directory inside the container
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
+# Copy the requirements file and install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the entire project into the container
 COPY . .
 
-ENV PYTHONUNBUFFERED=1
-ENV DJANGO_SETTINGS_MODULE=PGPIProject.settings 
+# Change the working directory to where manage.py is located
+WORKDIR /app/backend
+
+# Expose the default Django port
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "PGPIProject.wsgi:application"]
+# Command to run the Django development server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
