@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Pedidos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #27ae60;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        a, button {
+            color: white;
+            background-color: #27ae60;
+            text-decoration: none;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        a:hover, button:hover {
+            background-color: #1e874b;
+        }
+        .back-button {
+            margin-top: 20px;
+            display: inline-block;
+        }
+        form {
+            display: inline-block;
+        }
+        select {
+            padding: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lista de Pedidos</h1>
+    <a href="{% url 'catalogo' %}" class="back-button">Volver al Catálogo</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Total</th>
+                <th>Dirección de Entrega</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.display_email }}</td>
+                <td>€{{ order.total }}</td>
+                <td>{{ order.delivery_address }}</td>
+                <td>{{ order.status }}</td>
+                <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                <td>
+                    <!-- Formulario para editar el estado -->
+                    <form action="{% url 'update_order_status' order.id %}" method="post">
+                        {% csrf_token %}
+                        <select name="status">
+                            <option value="Pendiente" {% if order.status == "Pendiente" %}selected{% endif %}>Pendiente</option>
+                            <option value="En proceso" {% if order.status == "En proceso" %}selected{% endif %}>En proceso</option>
+                            <option value="Enviado" {% if order.status == "Enviado" %}selected{% endif %}>Enviado</option>
+                            <option value="Entregado" {% if order.status == "Entregado" %}selected{% endif %}>Entregado</option>
+                            <option value="Cancelado" {% if order.status == "Cancelado" %}selected{% endif %}>Cancelado</option>
+                        </select>
+                        <button type="submit">Actualizar</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center;">No hay pedidos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
