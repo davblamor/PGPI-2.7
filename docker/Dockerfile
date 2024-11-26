@@ -11,11 +11,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire project into the container
 COPY . .
 
-# Change the working directory to where manage.py is located
+# Set the working directory to where manage.py is located
 WORKDIR /app/backend
 
-# Expose the default Django port
+# Collect static files for Django
+RUN python manage.py collectstatic --noinput
+
+# Expose the port Render dynamically assigns (default is 8000)
 EXPOSE 8000
 
-# Command to run the Django development server
+# Start the Django app using the Render-provided PORT environment variable
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
