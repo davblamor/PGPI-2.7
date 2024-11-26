@@ -41,5 +41,6 @@ urlpatterns = [
     path('guest-checkout/', views.guest_cash_on_delivery_form, name='guest_cash_on_delivery_form'),
     path('finalize-guest-checkout/', views.finalize_guest_cash_on_delivery, name='finalize_guest_cash_on_delivery'),
     path('finalize-cash-on-delivery/', views.finalize_cash_on_delivery, name='finalize_cash_on_delivery'),
-
+    path('staff/orders/<int:order_id>/update/', views.update_order_status, name='update_order_status'),
+    path('staff/orders/', views.order_list, name='order_list'),
 ]

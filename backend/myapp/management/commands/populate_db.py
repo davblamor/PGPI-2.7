@@ -19,6 +19,7 @@ class Command(BaseCommand):
 
         User = get_user_model()
         User.objects.filter(email='testuser@django.com').delete()
+        User.objects.filter(email='admin@django.com').delete()
 
         #Create categories
         living_room = Category.objects.create(name="Salón", description="Electrodomésticos de salón")
@@ -134,6 +135,11 @@ class Command(BaseCommand):
 
         #Creación usuario de prueba
         user1 = User.objects.create_user(email='testuser@django.com', password='test')
+        administrator = User.objects.create_superuser(email='admin@django.com', password='admin')
+
+        # Asegurarse de que el administrador tiene `is_staff`
+        administrator.is_staff = True
+        administrator.save()
 
         #Crear una cesta y agregar items
         cart = Cart.objects.create(user=user1)

@@ -18,6 +18,8 @@ import stripe
 from django.conf import settings
 import uuid
 from decimal import Decimal
+from django.contrib.admin.views.decorators import staff_member_required
+
 
 from myapp.models import Product, Category, Manufacturer, Cart, CartItem, Order, OrderItem
 from myapp.serializer import ProductSerializer
@@ -157,6 +159,9 @@ def add_to_cart(request, product_id):
         if not created:
             cart_item.quantity += 1
             cart_item.save()
+    else:
+        messages.error(request, "No hay suficiente stock disponible")
+        return HttpResponse("No hay suficiente stock disponible", status=200)
     return redirect('catalogo')
 
 
@@ -949,7 +954,24 @@ def finalize_guest_cash_on_delivery(request):
         'error': 'Request method not allowed.'
     })
 
+@staff_member_required
+def update_order_status(request, order_id):
+    if request.method == "POST":
+        order = get_object_or_404(Order, id=order_id)
+        new_status = request.POST.get("status")
+        if new_status:
+            order.status = new_status
+            order.save()
+            return redirect("order_list")
+    return HttpResponse("Método no permitido", status=405)
 
+@staff_member_required
+def order_list(request):
+    orders = Order.objects.all().order_by('-created_at')
+    for order in orders:
+        # Añade un atributo personalizado con el correo o "Usuario invitado"
+        order.display_email = order.user.email if order.user else "Usuario invitado"
+    return render(request, 'order_list.html', {'orders': orders})
 
 # API para obtener el listado de productos
 class ProductListAPIView(generics.ListAPIView):
@@ -982,4 +1004,3 @@ class ProductDetailView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        
