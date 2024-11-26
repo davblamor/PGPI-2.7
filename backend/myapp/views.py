@@ -184,7 +184,7 @@ def cart(request):
 
     if cart_items:
         stripe.api_key = settings.STRIPE_SECRET_KEY
-        YOUR_DOMAIN = "http://127.0.0.1:8000"  # Replace with your deployed domain
+        YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"  # Replace with your deployed domain
 
         line_items = [
             {
