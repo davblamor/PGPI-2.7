@@ -326,7 +326,7 @@ def initiate_checkout(request):
     total = sum(item.product.price * item.quantity for item in cart.item.all())
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    YOUR_DOMAIN = "http://127.0.0.1:8000"  # Reemplaza con tu dominio
+    YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"  # Reemplaza con tu dominio
 
     line_items = [
         {
@@ -561,7 +561,7 @@ def initiate_checkout_guest(request):
     total = sum(item['price'] * item['quantity'] for item in cart.values())
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    YOUR_DOMAIN = "http://127.0.0.1:8000"  
+    YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"  
 
     line_items = [
         {
