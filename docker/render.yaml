@@ -1,0 +1,12 @@
+services:
+  - name: django-app
+    type: web
+    env: docker
+    dockerfilePath: ./docker/Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        value: <tu_url_de_base_de_datos>
+      - key: SECRET_KEY
+        value: <tu_clave_secreta>
+    plan: starter
+    autoDeploy: true
