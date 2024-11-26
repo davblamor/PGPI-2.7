@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash on Delivery - Guest</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            max-width: 900px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+        }
+        .summary {
+            background-color: #f9f9f9;
+            padding: 20px;
+            flex: 1;
+            border-right: 1px solid #ddd;
+        }
+        .summary h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .summary .item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        .summary .total {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .form-container {
+            padding: 20px;
+            flex: 1;
+        }
+        .form-container h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-label {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 4px rgba(0, 123, 255, 0.25);
+        }
+        .shipping-method {
+            margin-bottom: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        .shipping-method label {
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+        .shipping-method input {
+            margin-right: 10px;
+        }
+        .button {
+            background-color: #007bff;
+            color: #fff;
+            font-size: 1em;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function updateTotal(shippingCost) {
+            const subtotal = parseFloat(document.getElementById('subtotal').innerText);
+            document.getElementById('shipping-cost-display').innerText = shippingCost.toFixed(2);
+            const total = subtotal + parseFloat(shippingCost);
+            document.getElementById('total').innerText = total.toFixed(2);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Order Summary -->
+        <div class="summary">
+            <h2>Order Summary</h2>
+            {% for item in cart_items %}
+            <div class="item">
+                <span>{{ item.name }} (x{{ item.quantity }})</span>
+                <span>€{{ item.price|floatformat:2 }}</span>
+            </div>
+            {% endfor %}
+            <div class="item">
+                <span>Subtotal</span>
+                <span>€<span id="subtotal">{{ subtotal|floatformat:2 }}</span></span>
+            </div>
+            <div class="item">
+                <span>Shipping</span>
+                <span>€<span id="shipping-cost-display">5.00</span></span>
+            </div>
+            <div class="total">
+                <span>Total due</span>
+                <span>€<span id="total">{{ subtotal|floatformat:2 }}</span></span>
+            </div>
+        </div>
+        <!-- Shipping Information Form -->
+        <div class="form-container">
+            <h2>Shipping Information</h2>
+            <form method="POST" action="{% url 'finalize_guest_cash_on_delivery' %}">
+                {% csrf_token %}
+                <!-- Email -->
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                </div>
+        
+                <!-- Shipping Address -->
+                <h4>Shipping Address</h4>
+                <div class="form-group">
+                    <input type="text" id="name" name="name" class="form-input" placeholder="Full name" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="country" placeholder="Country" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="address_line_1" placeholder="Address Line 1" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="address_line_2" placeholder="Address Line 2 (Optional)">
+                </div>
+                <div class="form-group">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex: 1;">
+                            <input type="text" name="postal_code" placeholder="Postal Code" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <input type="text" name="city" placeholder="City" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="province" placeholder="Province" required>
+                </div>
+        
+                <!-- Shipping Method -->
+                <h4>Shipping Method</h4>
+                <div class="shipping-method">
+                    <label>
+                        <input type="radio" name="shipping_method" value="standard" checked onclick="updateTotal(5.00)">
+                        Standard shipping (€5.00, 5-7 business days)
+                    </label>
+                    <label>
+                        <input type="radio" name="shipping_method" value="express" onclick="updateTotal(15.00)">
+                        Express shipping (€15.00, 1-3 business days)
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex: 1;">
+                            <input type="tel" id="phone" name="phone" class="form-input" placeholder="Telephone number (optional)">
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Confirm Order Button -->
+                <button type="submit">Confirm Order</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

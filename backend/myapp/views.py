@@ -836,6 +836,123 @@ def cash_on_delivery_form(request):
         'cart_items': cart_items,
         'subtotal': subtotal,
     })
+    
+def guest_cash_on_delivery_form(request):
+    cart = request.session.get('cart', {})
+    if not cart:
+        return render(request, 'checkout_error.html', {
+            'error': 'Your cart is empty. Add products before completing the purchase.'
+        })
+
+    cart_items = [
+        {
+            'name': item['name'],
+            'price': item['price'],
+            'quantity': item['quantity'],
+            'total': item['price'] * item['quantity']
+        }
+        for item in cart.values()
+    ]
+    subtotal = sum(item['total'] for item in cart_items)
+
+    return render(request, 'guest_cash_on_delivery_form.html', {
+        'cart_items': cart_items,
+        'subtotal': subtotal,
+    })
+
+
+def finalize_guest_cash_on_delivery(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone', None)  # Optional
+        address_line_1 = request.POST.get('address_line_1')
+        address_line_2 = request.POST.get('address_line_2', '')  # Optional
+        city = request.POST.get('city')
+        province = request.POST.get('province')
+        postal_code = request.POST.get('postal_code')
+        country = request.POST.get('country')
+        shipping_method = request.POST.get('shipping_method')
+
+        address = f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}"
+
+        # Validate required fields
+        if not all([name, email, address_line_1, city, province, postal_code, country, shipping_method]):
+            return render(request, 'checkout_error.html', {
+                'error': 'Please fill in all required fields.'
+            })
+
+        # Validate cart
+        cart = request.session.get('cart', {})
+        if not cart:
+            return render(request, 'checkout_error.html', {
+                'error': 'Your cart is empty. Add products before completing the purchase.'
+            })
+
+        # Calculate prices
+        cart_items = []
+        for product_id, item in cart.items():
+            try:
+                product = Product.objects.get(id=product_id)
+                cart_items.append({
+                    'product': product,
+                    'name': item['name'],
+                    'price': Decimal(item['price']),
+                    'quantity': item['quantity'],
+                    'total': Decimal(item['price']) * item['quantity'],
+                })
+            except Product.DoesNotExist:
+                # Handle invalid product references
+                continue
+
+        subtotal = sum(item['total'] for item in cart_items)
+        shipping_cost = Decimal('5.00') if shipping_method == 'standard' else Decimal('15.00')
+        total_price = subtotal + shipping_cost
+
+        # Generate tracking number
+        track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
+
+        # Create order (without linking to a user)
+        order = Order.objects.create(
+            user=None,  # No user linked
+            total=total_price,
+            delivery_address=address,
+            track_number=track_number,
+            status='Received',
+        )
+
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=item['product'],  # Pass the actual Product instance
+                quantity=item['quantity'],
+                price=item['price'],
+            )
+
+        # Clear the session cart
+        del request.session['cart']
+
+        # Render success page
+        return render(request, 'success_guest.html', {
+            'track_number': track_number,
+            'name': name,
+            'address': {
+                "line1": address_line_1,
+                "line2": address_line_2,
+                "city": city,
+                "state": province,
+                "postal_code": postal_code,
+                "country": country,
+            },
+            'subtotal': subtotal,
+            'shipping_cost': shipping_cost,
+            'total': total_price,
+        })
+
+    return render(request, 'checkout_error.html', {
+        'error': 'Request method not allowed.'
+    })
+
 
 
 # API para obtener el listado de productos
