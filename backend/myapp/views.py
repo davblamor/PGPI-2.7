@@ -165,7 +165,6 @@ def add_to_cart(request, product_id):
     return redirect('catalogo')
 
 
-
 # Vista del carrito de compras
 @login_required
 def cart(request):
@@ -498,16 +497,21 @@ def add_to_cart_guest(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     cart = request.session.get('cart', {})
 
-    if str(product_id) in cart:
-        cart[str(product_id)]['quantity'] += 1
+    # Verificar stock antes de añadir al carrito
+    if product.stock > 0:
+        if str(product_id) in cart:
+            cart[str(product_id)]['quantity'] += 1
+        else:
+            cart[str(product_id)] = {
+                'name': product.name,
+                'price': float(product.price),
+                'quantity': 1,
+            }
+        request.session['cart'] = cart
     else:
-        cart[str(product_id)] = {
-            'name': product.name,
-            'price': float(product.price),
-            'quantity': 1,
-        }
+        messages.error(request, "No hay suficiente stock disponible")
+        return redirect('catalogo')
 
-    request.session['cart'] = cart
     return redirect('catalogo')
 
 def cart_guest(request):
