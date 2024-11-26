@@ -757,38 +757,38 @@ def finalize_cash_on_delivery(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        address = request.POST.get('address')
+        phone = request.POST.get('phone', None)  # Optional field
+        address_line_1 = request.POST.get('address_line_1')
+        address_line_2 = request.POST.get('address_line_2', '')  # Optional
+        city = request.POST.get('city')
+        province = request.POST.get('province')
+        postal_code = request.POST.get('postal_code')
+        country = request.POST.get('country')
         shipping_method = request.POST.get('shipping_method')
 
-        if not all([name, email, phone, address, shipping_method]):
-            return render(request, 'error.html', {
-                'error': 'Todos los campos son obligatorios para completar el pedido.'
-            })
+        address = f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}"
+
+        if not all([name, email, address_line_1, city, province, postal_code, country, shipping_method]):
+            messages.error(request, 'Please fill in all required fields.')
+            return redirect('cash_on_delivery_form')
 
         cart = Cart.objects.filter(user=request.user).first()
         if not cart or not cart.item.exists():
-            return render(request, 'error.html', {
-                'error': 'Tu carrito está vacío. Añade productos antes de finalizar la compra.'
-            })
+            messages.error(request, 'Your cart is empty. Add products before completing the purchase.')
+            return redirect('cash_on_delivery_form')
 
         cart_items = cart.item.all()
         subtotal = sum(item.product.price * item.quantity for item in cart_items)
-
-        shipping_cost = Decimal('5.00')
-        if shipping_method == 'express':
-            shipping_cost = Decimal('15.00')
-
+        shipping_cost = Decimal('5.00') if shipping_method == 'standard' else Decimal('15.00')
         total_price = subtotal + shipping_cost
 
         track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
-
         order = Order.objects.create(
             user=request.user,
             total=total_price,
             delivery_address=address,
             track_number=track_number,
-            status='Recibido',
+            status='Received',
         )
 
         for item in cart_items:
@@ -796,7 +796,7 @@ def finalize_cash_on_delivery(request):
                 order=order,
                 product=item.product,
                 quantity=item.quantity,
-                price=item.product.price
+                price=item.product.price,
             )
 
         cart_items.delete()
@@ -805,29 +805,27 @@ def finalize_cash_on_delivery(request):
             'track_number': track_number,
             'name': name,
             'address': {
-                "line1": address,
-                "line2": "",
-                "city": "No especificada",
-                "state": "No especificado",
-                "postal_code": "No especificado",
-                "country": "No especificado"
+                "line1": address_line_1,
+                "line2": address_line_2,
+                "city": city,
+                "state": province,
+                "postal_code": postal_code,
+                "country": country,
             },
-            'cart_items': cart_items,
             'subtotal': subtotal,
             'shipping_cost': shipping_cost,
             'total': total_price,
         })
 
-    return render(request, 'error.html', {
-        'error': 'Método de solicitud no permitido.'
-    })
+    messages.error(request, 'Invalid request method.')
+    return redirect('cash_on_delivery_form')
 
 
 @login_required
 def cash_on_delivery_form(request):
     cart = Cart.objects.filter(user=request.user).first()
     if not cart or not cart.item.exists():
-        return render(request, 'error.html', {
+        return render(request, 'checkout_error.html', {
             'error': 'Tu carrito está vacío. Añade productos antes de finalizar la compra.'
         })
 
