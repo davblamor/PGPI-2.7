@@ -26,11 +26,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-h*8e!*=(4=1p6#yw3)y0curx-ji$)!$uv+c16hjiaku8#9fgw)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
+CSRF_TRUSTED_ORIGINS = ['https://pgpi-2-7.onrender.com']
 
-ALLOWED_HOSTS = [os.getenv("RENDER_EXTERNAL_HOSTNAME", "localhost")]
+ALLOWED_HOSTS = [os.getenv("RENDER_EXTERNAL_HOSTNAME", "localhost"), "pgpi-2-7.onrender.com"]
 
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 # Application definition
 
