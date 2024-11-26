@@ -757,29 +757,33 @@ def cash_on_delivery_form(request):
         return render(request, 'cash_on_delivery_form.html')
     
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from decimal import Decimal
+
 @login_required
 def finalize_cash_on_delivery(request):
     if request.method == 'POST':
+        print("Formulario enviado correctamente")
+        print("Datos del POST:", request.POST)
+
         name = request.POST.get('name')
         email = request.POST.get('email')
-        phone = request.POST.get('phone', None)  # Optional field
         address_line_1 = request.POST.get('address_line_1')
-        address_line_2 = request.POST.get('address_line_2', '')  # Optional
+        address_line_2 = request.POST.get('address_line_2', '')
         city = request.POST.get('city')
-        province = request.POST.get('province')
+        province = request.POST.get('province', '')
         postal_code = request.POST.get('postal_code')
         country = request.POST.get('country')
         shipping_method = request.POST.get('shipping_method')
 
-        address = f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}"
-
-        if not all([name, email, address_line_1, city, province, postal_code, country, shipping_method]):
-            messages.error(request, 'Please fill in all required fields.')
+        if not all([name, email, address_line_1, city, postal_code, country, shipping_method]):
+            messages.error(request, 'Por favor, complete todos los campos obligatorios.')
             return redirect('cash_on_delivery_form')
 
         cart = Cart.objects.filter(user=request.user).first()
         if not cart or not cart.item.exists():
-            messages.error(request, 'Your cart is empty. Add products before completing the purchase.')
+            messages.error(request, 'Tu carrito está vacío.')
             return redirect('cash_on_delivery_form')
 
         cart_items = cart.item.all()
@@ -787,12 +791,11 @@ def finalize_cash_on_delivery(request):
         shipping_cost = Decimal('5.00') if shipping_method == 'standard' else Decimal('15.00')
         total_price = subtotal + shipping_cost
 
-        track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
         order = Order.objects.create(
             user=request.user,
             total=total_price,
-            delivery_address=address,
-            track_number=track_number,
+            delivery_address=f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}",
+            track_number=f"TRACK-{uuid.uuid4().hex[:10].upper()}",
             status='Received',
         )
 
@@ -807,23 +810,16 @@ def finalize_cash_on_delivery(request):
         cart_items.delete()
 
         return render(request, 'success.html', {
-            'track_number': track_number,
+            'track_number': order.track_number,
             'name': name,
-            'address': {
-                "line1": address_line_1,
-                "line2": address_line_2,
-                "city": city,
-                "state": province,
-                "postal_code": postal_code,
-                "country": country,
-            },
             'subtotal': subtotal,
             'shipping_cost': shipping_cost,
             'total': total_price,
         })
 
-    messages.error(request, 'Invalid request method.')
+    messages.error(request, 'Método de solicitud inválido.')
     return redirect('cash_on_delivery_form')
+
 
 
 @login_required
