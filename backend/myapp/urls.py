@@ -37,4 +37,10 @@ urlpatterns = [
     path('success_guest/', views.success_guest_view, name='success_guest'),
     path('track_order/', views.track_order, name='track_order'),
     path('initiate_checkout/', views.initiate_checkout, name='initiate_checkout'),
+    path('cash-on-delivery-form/', views.cash_on_delivery_form, name='cash_on_delivery_form'),
+    path('guest-checkout/', views.guest_cash_on_delivery_form, name='guest_cash_on_delivery_form'),
+    path('finalize-guest-checkout/', views.finalize_guest_cash_on_delivery, name='finalize_guest_cash_on_delivery'),
+    path('finalize-cash-on-delivery/', views.finalize_cash_on_delivery, name='finalize_cash_on_delivery'),
+    path('staff/orders/<int:order_id>/update/', views.update_order_status, name='update_order_status'),
+    path('staff/orders/', views.order_list, name='order_list'),
 ]

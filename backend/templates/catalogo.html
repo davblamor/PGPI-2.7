@@ -261,6 +261,9 @@
             <a href="{% url 'track_order_guest' %}" class="track-order-button">Seguir mi pedido</a>
         </div>
         <div class="header-buttons">
+            {% if user.is_staff %}
+                <a href="{% url 'order_list' %}" class="admin-orders-button">Ver Pedidos</a>
+            {% endif %}
             {% if user.is_authenticated %}
             <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a>
             {% else %}

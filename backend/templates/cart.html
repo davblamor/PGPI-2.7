@@ -149,13 +149,15 @@
         </div>
 
         <div class="cart-actions">
-            <a href="{% url 'catalogo' %}">Seguir comprando</a>
+            <a href="{% url 'catalogo' %}">Seguir Comprando</a>
             {% if total_items > 0 %}
-                <a href="{% url 'initiate_checkout' %}" class="btn">Finalizar compra</a>
+                <a href="{% url 'initiate_checkout' %}" class="btn">Pago con Tarjeta</a>
+                <a href="{% url 'cash_on_delivery_form' %}" class="btn">Pago Contrareembolso</a>
             {% else %}
                 <button disabled>Carrito vacío</button>
             {% endif %}
         </div>
+                     
     </div>
 </body>
 </html>
