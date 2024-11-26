@@ -79,10 +79,11 @@ class CartItem(models.Model):
 #Pedido
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('Recibido', 'Recibido'),
-        ('En Proceso', 'En Proceso'),
+        ('Pendiente', 'Pendiente'),
+        ('En proceso', 'En proceso'),
         ('Enviado', 'Enviado'),
         ('Entregado', 'Entregado'),
+        ('Cancelado', 'Cancelado'),
     ]
     
     PAYMENT_METHOD_CHOICES = [
@@ -96,7 +97,7 @@ class Order(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_address = models.TextField()
     track_number = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Recibido')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pendiente')
     payment_method = models.CharField(
         max_length=20,
         choices=PAYMENT_METHOD_CHOICES,
