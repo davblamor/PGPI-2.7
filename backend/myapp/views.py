@@ -156,6 +156,9 @@ def add_to_cart(request, product_id):
         if not created:
             cart_item.quantity += 1
             cart_item.save()
+    else:
+        messages.error(request, "No hay suficiente stock disponible")
+        return HttpResponse("No hay suficiente stock disponible", status=200)
     return redirect('catalogo')
 
 

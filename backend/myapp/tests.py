@@ -113,7 +113,7 @@ class CartIntegrationTests(TestCase):
 
     def test_cannot_add_out_of_stock_product(self):
         product_out_of_stock = Product.objects.create(
-            name="PlayStation 5", price=499.99, stock=0, category=self.category
+            name="PlayStation 5", price=499.99, stock=0, category=self.category, manufacturer=self.manufacturer
         )
         self.client.login(email=self.user.email, password="password123")
         response = self.client.post(reverse('add_to_cart', args=[product_out_of_stock.id]))
