@@ -164,13 +164,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Stripe API Configuration
-STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', 'pk_test_51QMZkdK3ST65uLzHSxCUtSznKOGLJAYiVyupAhi2DA5P8dwvCkaOcRx4M0FvbOuQYnleareipjcFhNJmjrnzGY6N00dZVudxTy') 
-STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', 'sk_test_51QMZkdK3ST65uLzHdfpHCtvQUGsDbXJROffmCjRN1a6bjqpGLBRqTQFCiezhybaAfYHLFF7s2ixI6wXpkmcu9xlu00Z4RD7tG1')
-
 # Stripe API Configuration
 STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
