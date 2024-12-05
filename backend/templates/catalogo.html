@@ -253,6 +253,9 @@
             <h1>Catálogo de Productos</h1>
         </div>
         <div class="header-buttons">
+            {% if user.is_staff %}
+                <a href="{% url 'add_product' %}" class="admin-orders-button">Añadir Producto</a>
+            {% endif %}
             <a href="{% if user.is_authenticated %}{% url 'cart' %}{% else %}{% url 'cart_guest' %}{% endif %}">Ver mi
                 cesta</a>
             {% if total_items > 0 %}
@@ -262,7 +265,8 @@
         </div>
         <div class="header-buttons">
             {% if user.is_staff %}
-                <a href="{% url 'order_list' %}" class="admin-orders-button">Ver Pedidos</a>
+                <a href="{% url 'order_list' %}" class="admin-orders-button">Ver Pedidos (Gestión de Ventas)</a>
+                <a href="{% url 'user_list' %}" class="admin-orders-button" style="background-color: #27ae60;">Ver Usuarios (Gestión de Clientes)</a>
             {% endif %}
             {% if user.is_authenticated %}
             <a href="{% url 'profile' %}" class="user-email">{{ user.email }}</a>
@@ -321,18 +325,29 @@
                     <p class="price">€{{ producto.price }}</p>
                     <p class="stock">Stock: {{ producto.stock }}</p>
 
+                    <!-- Show add to cart button only if stock > 0 -->
                     {% if producto.stock > 0 %}
                     <form
                         action="{% if user.is_authenticated %}{% url 'add_to_cart' producto.id %}{% else %}{% url 'add_to_cart_guest' producto.id %}{% endif %}"
-                        method="post">
+                        method="post" style="margin-bottom: 10px;">
                         {% csrf_token %}
-                        <button type="submit">Añadir a la cesta</button>
+                        <button type="submit" style="display: block; width: 100%; padding: 10px; background-color: #27ae60; color: white; border: none; border-radius: 5px; font-weight: bold;">Añadir a la cesta</button>
                     </form>
                     {% else %}
-                    <p style="color: red; font-weight: bold;">Producto Agotado</p>
+                    <p style="color: red; font-weight: bold; text-align: center;">Producto Agotado</p>
+                    {% endif %}
+
+                    <!-- Botones de administración -->
+                    {% if user.is_staff %}
+                        <form action="{% url 'update_product' producto.id %}" method="get" style="margin-bottom: 10px;">
+                            <button type="submit" style="display: block; width: 100%; padding: 10px; background-color: blue; color: white; border: none; border-radius: 5px; font-weight: bold;">Actualizar producto</button>
+                        </form>
+                        <form action="{% url 'delete_product' producto.id %}" method="post" style="margin-bottom: 10px;">
+                            {% csrf_token %}
+                            <button type="submit" style="display: block; width: 100%; padding: 10px; background-color: red; color: white; border: none; border-radius: 5px; font-weight: bold;">Eliminar producto</button>
+                        </form>
                     {% endif %}
                 </div>
-
                 {% empty %}
                 <p>No hay productos disponibles.</p>
                 {% endfor %}
