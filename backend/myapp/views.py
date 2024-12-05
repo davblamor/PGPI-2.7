@@ -255,6 +255,50 @@ class StripeCheckoutSessionView(View):
         cart = Cart.objects.get(user=request.user)
         cart_items = cart.item.all()
 
+        # Calculate the subtotal
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+
+        # Determine shipping options
+        shipping_options = [
+            {
+                'shipping_rate_data': {
+                    'type': 'fixed_amount',
+                    'fixed_amount': {'amount': 500, 'currency': 'eur'},
+                    'display_name': 'Standard shipping (€5.00, 5-7 business days)',
+                    'delivery_estimate': {
+                        'minimum': {'unit': 'business_day', 'value': 5},
+                        'maximum': {'unit': 'business_day', 'value': 7},
+                    },
+                },
+            },
+            {
+                'shipping_rate_data': {
+                    'type': 'fixed_amount',
+                    'fixed_amount': {'amount': 1500, 'currency': 'eur'},
+                    'display_name': 'Express shipping (€15.00, 1-3 business days)',
+                    'delivery_estimate': {
+                        'minimum': {'unit': 'business_day', 'value': 1},
+                        'maximum': {'unit': 'business_day', 'value': 3},
+                    },
+                },
+            },
+        ]
+
+        # Add free shipping option if subtotal >= €1500
+        if subtotal >= 1500:
+            shipping_options.append({
+                'shipping_rate_data': {
+                    'type': 'fixed_amount',
+                    'fixed_amount': {'amount': 0, 'currency': 'eur'},
+                    'display_name': 'Free shipping (Subtotal ≥ €1500)',
+                    'delivery_estimate': {
+                        'minimum': {'unit': 'business_day', 'value': 5},
+                        'maximum': {'unit': 'business_day', 'value': 7},
+                    },
+                },
+            })
+
+        # Create line items for Stripe
         line_items = [
             {
                 'price_data': {
@@ -277,36 +321,14 @@ class StripeCheckoutSessionView(View):
                 success_url=YOUR_DOMAIN + '/success/?session_id={CHECKOUT_SESSION_ID}',
                 cancel_url=YOUR_DOMAIN + '/cart/',
                 shipping_address_collection={
-                    'allowed_countries': ['US', 'CA', 'ES'], 
+                    'allowed_countries': ['US', 'CA', 'ES'],
                 },
-                shipping_options=[
-                    {
-                        'shipping_rate_data': {
-                            'type': 'fixed_amount',
-                            'fixed_amount': {'amount': 500, 'currency': 'eur'},
-                            'display_name': 'Standard shipping',
-                            'delivery_estimate': {
-                                'minimum': {'unit': 'business_day', 'value': 5},
-                                'maximum': {'unit': 'business_day', 'value': 7},
-                            },
-                        },
-                    },
-                    {
-                        'shipping_rate_data': {
-                            'type': 'fixed_amount',
-                            'fixed_amount': {'amount': 1500, 'currency': 'eur'},
-                            'display_name': 'Express shipping',
-                            'delivery_estimate': {
-                                'minimum': {'unit': 'business_day', 'value': 1},
-                                'maximum': {'unit': 'business_day', 'value': 3},
-                            },
-                        },
-                    },
-                ],
+                shipping_options=shipping_options,
             )
             return JsonResponse({'id': checkout_session.id})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
         
 @login_required
 def initiate_checkout(request):
@@ -314,20 +336,11 @@ def initiate_checkout(request):
     if not cart or not cart.item.exists():
         return redirect('cart')
 
-    productos_no_existentes = []
-    for item in cart.item.all():
-        if item.product.stock < item.quantity:
-            productos_no_existentes.append(item.product.name)
-
-    if productos_no_existentes:
-        return render(request, 'checkout_error.html', {
-            'error': f'Los siguientes productos no tienen suficiente stock: {", ".join(productos_no_existentes)}. Por favor, actualiza tu carrito.'
-        })
-
-    total = sum(item.product.price * item.quantity for item in cart.item.all())
+    cart_items = cart.item.all()
+    subtotal = sum(item.product.price * item.quantity for item in cart_items)
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"  # Reemplaza con tu dominio
+    YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"
 
     line_items = [
         {
@@ -336,12 +349,51 @@ def initiate_checkout(request):
                 'product_data': {
                     'name': item.product.name,
                 },
-                'unit_amount': int(item.product.price * 100),  # Convertir a centavos
+                'unit_amount': int(item.product.price * 100),
             },
             'quantity': item.quantity,
         }
-        for item in cart.item.all()
+        for item in cart_items
     ]
+
+    # Determine shipping options
+    shipping_options = [
+        {
+            'shipping_rate_data': {
+                'type': 'fixed_amount',
+                'fixed_amount': {'amount': 500, 'currency': 'eur'},
+                'display_name': 'Envío Estándar (€5.00, 5-7 días hábiles)',
+                'delivery_estimate': {
+                    'minimum': {'unit': 'business_day', 'value': 5},
+                    'maximum': {'unit': 'business_day', 'value': 7},
+                },
+            },
+        },
+        {
+            'shipping_rate_data': {
+                'type': 'fixed_amount',
+                'fixed_amount': {'amount': 1500, 'currency': 'eur'},
+                'display_name': 'Envío Exprés (€15.00, 1-3 días hábiles)',
+                'delivery_estimate': {
+                    'minimum': {'unit': 'business_day', 'value': 1},
+                    'maximum': {'unit': 'business_day', 'value': 3},
+                },
+            },
+        },
+    ]
+
+    if subtotal >= 1500:
+        shipping_options.append({
+            'shipping_rate_data': {
+                'type': 'fixed_amount',
+                'fixed_amount': {'amount': 0, 'currency': 'eur'},
+                'display_name': 'Envío Exprés (€15.00, 1-3 días hábiles)',
+                'delivery_estimate': {
+                    'minimum': {'unit': 'business_day', 'value': 1},
+                    'maximum': {'unit': 'business_day', 'value': 3},
+                },
+            },
+        })
 
     try:
         checkout_session = stripe.checkout.Session.create(
@@ -351,55 +403,12 @@ def initiate_checkout(request):
             success_url=YOUR_DOMAIN + '/success/?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=YOUR_DOMAIN + '/cart/',
             shipping_address_collection={
-                'allowed_countries': ['US', 'CA', 'ES']
+                'allowed_countries': ['US', 'CA', 'ES'],
             },
-            shipping_options=[
-                {
-                    'shipping_rate_data': {
-                        'type': 'fixed_amount',
-                        'fixed_amount': {'amount': 500, 'currency': 'eur'},
-                        'display_name': 'Standard shipping',
-                        'delivery_estimate': {
-                            'minimum': {'unit': 'business_day', 'value': 5},
-                            'maximum': {'unit': 'business_day', 'value': 7},
-                        },
-                    },
-                },
-                {
-                    'shipping_rate_data': {
-                        'type': 'fixed_amount',
-                        'fixed_amount': {'amount': 1500, 'currency': 'eur'},
-                        'display_name': 'Express shipping',
-                        'delivery_estimate': {
-                            'minimum': {'unit': 'business_day', 'value': 1},
-                            'maximum': {'unit': 'business_day', 'value': 3},
-                        },
-                    },
-                },
-            ],
+            shipping_options=shipping_options,
         )
-
-        track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
-
-        order = Order.objects.create(
-            user=request.user,
-            session_id=checkout_session.id,
-            total=total,
-            delivery_address="Pendiente de ser completada",
-            track_number=track_number,
-            status='Recibido'
-        )
-
-        for item in cart.item.all():
-            OrderItem.objects.create(
-                order=order,
-                product=item.product,
-                quantity=item.quantity,
-                price=item.product.price
-            )
 
         return redirect(checkout_session.url, code=303)
-
     except stripe.error.StripeError as e:
         return render(request, 'checkout_error.html', {'error': str(e)})
 
@@ -546,7 +555,7 @@ def initiate_checkout_guest(request):
     productos_no_existentes = []
     for product_id, item in list(cart.items()):
         try:
-            product = Product.objects.get(id=product_id)
+            Product.objects.get(id=product_id)
         except Product.DoesNotExist:
             productos_no_existentes.append(product_id)
             del cart[product_id]
@@ -559,10 +568,10 @@ def initiate_checkout_guest(request):
             'error': f'Los siguientes productos se eliminaron del carrito porque no existen: {productos_ids}. Por favor, actualiza tu carrito.'
         })
 
-    total = sum(item['price'] * item['quantity'] for item in cart.values())
+    subtotal = sum(item['price'] * item['quantity'] for item in cart.values())
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"  
+    YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"
 
     line_items = [
         {
@@ -571,68 +580,66 @@ def initiate_checkout_guest(request):
                 'product_data': {
                     'name': item['name'],
                 },
-                'unit_amount': int(item['price'] * 100),  
+                'unit_amount': int(item['price'] * 100),
             },
             'quantity': item['quantity'],
         }
         for item in cart.values()
     ]
 
+    # Determine shipping options
+    shipping_options = [
+        {
+            'shipping_rate_data': {
+                'type': 'fixed_amount',
+                'fixed_amount': {'amount': 500, 'currency': 'eur'},
+                'display_name': 'Envío Estándar (€5.00, 5-7 días hábiles)',
+                'delivery_estimate': {
+                    'minimum': {'unit': 'business_day', 'value': 5},
+                    'maximum': {'unit': 'business_day', 'value': 7},
+                },
+            },
+        },
+        {
+            'shipping_rate_data': {
+                'type': 'fixed_amount',
+                'fixed_amount': {'amount': 1500, 'currency': 'eur'},
+                'display_name': 'Envío Exprés (€15.00, 1-3 días hábiles)',
+                'delivery_estimate': {
+                    'minimum': {'unit': 'business_day', 'value': 1},
+                    'maximum': {'unit': 'business_day', 'value': 3},
+                },
+            },
+        },
+    ]
+
+    if subtotal >= 1500:
+        shipping_options.append({
+            'shipping_rate_data': {
+                'type': 'fixed_amount',
+                'fixed_amount': {'amount': 0, 'currency': 'eur'},
+                'display_name': 'Envío Gratuito (Pedido superior a €1500)',
+                'delivery_estimate': {
+                    'minimum': {'unit': 'business_day', 'value': 1},
+                    'maximum': {'unit': 'business_day', 'value': 3},
+                },
+            },
+        })
+
     try:
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url=YOUR_DOMAIN + '/success_guest/?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=YOUR_DOMAIN + '/cart_guest/',
+            success_url=f"{YOUR_DOMAIN}/success_guest/?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{YOUR_DOMAIN}/cart_guest/",
             shipping_address_collection={
-                'allowed_countries': ['US', 'CA', 'ES']
+                'allowed_countries': ['US', 'CA', 'ES'],
             },
-            shipping_options=[
-                {
-                    'shipping_rate_data': {
-                        'type': 'fixed_amount',
-                        'fixed_amount': {'amount': 500, 'currency': 'eur'},
-                        'display_name': 'Standard shipping',
-                        'delivery_estimate': {
-                            'minimum': {'unit': 'business_day', 'value': 5},
-                            'maximum': {'unit': 'business_day', 'value': 7},
-                        },
-                    },
-                },
-                {
-                    'shipping_rate_data': {
-                        'type': 'fixed_amount',
-                        'fixed_amount': {'amount': 1500, 'currency': 'eur'},
-                        'display_name': 'Express shipping',
-                        'delivery_estimate': {
-                            'minimum': {'unit': 'business_day', 'value': 1},
-                            'maximum': {'unit': 'business_day', 'value': 3},
-                        },
-                    },
-                },
-            ],
+            shipping_options=shipping_options,
         )
-
-        track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
-
-        order = Order.objects.create(
-            session_id=checkout_session.id,
-            total=total,
-            delivery_address="Pendiente de ser completada",
-            track_number=track_number 
-        )
-
-        for product_id, item in cart.items():
-            OrderItem.objects.create(
-                order=order,
-                product=Product.objects.get(id=product_id),
-                quantity=item['quantity'],
-                price=item['price']
-            )
 
         return redirect(checkout_session.url, code=303)
-
     except stripe.error.StripeError as e:
         return render(request, 'checkout_error.html', {'error': str(e)})
     
