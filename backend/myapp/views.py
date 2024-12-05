@@ -25,6 +25,7 @@ from myapp.models import Product, Category, Manufacturer, Cart, CartItem, Order,
 from myapp.serializer import ProductSerializer
 from .forms import RegistrationForm, LoginForm
 from django.contrib import messages
+from .forms import ProductForm
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -1008,3 +1009,23 @@ class ProductDetailView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@staff_member_required
+def add_product(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Producto añadido con éxito.')
+            return redirect('catalogo')
+    else:
+        form = ProductForm()
+    return render(request, 'add_product.html', {'form': form})
+
+@staff_member_required
+def delete_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    product.delete()
+    messages.success(request, 'Producto eliminado con éxito.')
+    return redirect('catalogo')

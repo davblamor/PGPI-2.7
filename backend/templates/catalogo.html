@@ -253,6 +253,9 @@
             <h1>Catálogo de Productos</h1>
         </div>
         <div class="header-buttons">
+            {% if user.is_staff %}
+                <a href="{% url 'add_product' %}" class="admin-orders-button">Añadir Producto</a>
+            {% endif %}
             <a href="{% if user.is_authenticated %}{% url 'cart' %}{% else %}{% url 'cart_guest' %}{% endif %}">Ver mi
                 cesta</a>
             {% if total_items > 0 %}
@@ -322,15 +325,24 @@
                     <p class="stock">Stock: {{ producto.stock }}</p>
 
                     {% if producto.stock > 0 %}
+                    <!-- Form for adding a product to the cart -->
                     <form
                         action="{% if user.is_authenticated %}{% url 'add_to_cart' producto.id %}{% else %}{% url 'add_to_cart_guest' producto.id %}{% endif %}"
-                        method="post">
+                        method="post" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit">Añadir a la cesta</button>
                     </form>
+                    {% if user.is_staff %}
+                    <!-- Separate form for deleting a product -->
+                    <form action="{% url 'delete_product' producto.id %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background-color: red; color: white;">Eliminar producto</button>
+                    </form>
+                    {% endif %}
                     {% else %}
                     <p style="color: red; font-weight: bold;">Producto Agotado</p>
                     {% endif %}
+
                 </div>
 
                 {% empty %}
