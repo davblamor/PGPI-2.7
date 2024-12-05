@@ -1018,9 +1018,12 @@ def add_product(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Producto añadido con éxito.')
-            return redirect('catalogo')
+            return redirect('catalogo')  # Redirigir después de guardar
+        else:
+            messages.error(request, 'Error al añadir el producto. Por favor, verifica los datos.')
     else:
         form = ProductForm()
+
     return render(request, 'add_product.html', {'form': form})
 
 @staff_member_required
