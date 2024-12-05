@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.urls import reverse
@@ -21,7 +21,7 @@ from decimal import Decimal
 from django.contrib.admin.views.decorators import staff_member_required
 
 
-from myapp.models import Product, Category, Manufacturer, Cart, CartItem, Order, OrderItem
+from myapp.models import Product, Category, Manufacturer, Cart, CartItem, Order, OrderItem, CustomUser
 from myapp.serializer import ProductSerializer
 from .forms import RegistrationForm, LoginForm
 from django.contrib import messages
@@ -1059,3 +1059,20 @@ def update_order(request, order_id):
         return redirect('order_list')
 
     return render(request, 'update_order.html', {'order': order})
+
+@staff_member_required
+def user_list(request):
+    users = CustomUser.objects.all()
+    return render(request, 'user_list.html', {'users': users})
+
+@staff_member_required
+def delete_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    
+    if user.is_superuser:
+        messages.error(request, "No se puede eliminar un superusuario.")
+        return redirect('user_list')
+    
+    user.delete()
+    messages.success(request, "Usuario eliminado con éxito.")
+    return redirect('user_list')
