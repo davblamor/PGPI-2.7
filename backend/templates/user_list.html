@@ -69,8 +69,6 @@
             <tr>
                 <th>ID</th>
                 <th>Correo Electrónico</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -79,8 +77,6 @@
             <tr>
                 <td>{{ user.id }}</td>
                 <td>{{ user.email }}</td>
-                <td>{{ user.first_name }}</td>
-                <td>{{ user.last_name }}</td>
                 <td>
                     {% if user.id != request.user.id and not user.is_superuser %}
                         <form action="{% url 'delete_user' user.id %}" method="post" style="display: inline;" onsubmit="return confirmDeletion('{{ user.email }}');">
