@@ -115,6 +115,19 @@
             const total = subtotal + parseFloat(shippingCost);
             document.getElementById('total').innerText = total.toFixed(2);
         }
+
+        function toggleFreeShippingOption() {
+            const subtotal = parseFloat(document.getElementById('subtotal').innerText);
+            const freeShippingOption = document.getElementById('free-shipping-option');
+            
+            if (subtotal >= 1500) {
+                freeShippingOption.style.display = "block";
+            } else {
+                freeShippingOption.style.display = "none";
+            }
+        }
+
+        window.onload = toggleFreeShippingOption;
     </script>
 </head>
 <body>
@@ -189,6 +202,12 @@
                             <input type="radio" name="shipping_method" value="express" onclick="updateTotal(15.00)">
                             Envío Exprés (€15.00, 1-3 días hábiles)
                         </label>
+                        <div id="free-shipping-option" style="display: none;">
+                            <label>
+                                <input type="radio" name="shipping_method" value="free" onclick="updateTotal(0.00)">
+                                Envío Gratuito (Pedidos superiores a 1500.0€, 1-3 días hábiles)
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <button type="submit" class="button">Confirmar Pedido</button>
