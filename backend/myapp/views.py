@@ -387,7 +387,7 @@ def initiate_checkout(request):
             'shipping_rate_data': {
                 'type': 'fixed_amount',
                 'fixed_amount': {'amount': 0, 'currency': 'eur'},
-                'display_name': 'Envío Exprés (€15.00, 1-3 días hábiles)',
+                'display_name': 'Envío Gratuito (Pedido superior a €1500)',
                 'delivery_estimate': {
                     'minimum': {'unit': 'business_day', 'value': 1},
                     'maximum': {'unit': 'business_day', 'value': 3},
@@ -400,15 +400,38 @@ def initiate_checkout(request):
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url=YOUR_DOMAIN + '/success/?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=YOUR_DOMAIN + '/cart/',
+            success_url=f"{YOUR_DOMAIN}/success/?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{YOUR_DOMAIN}/cart/",
             shipping_address_collection={
                 'allowed_countries': ['US', 'CA', 'ES'],
             },
             shipping_options=shipping_options,
         )
 
+        # Generate tracking number
+        track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
+
+        # Create order
+        order = Order.objects.create(
+            user=request.user,
+            session_id=checkout_session.id,
+            total=subtotal,
+            delivery_address="Pendiente de ser completada",
+            track_number=track_number,
+            status='Recibido',
+        )
+
+        # Add order items
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price,
+            )
+
         return redirect(checkout_session.url, code=303)
+
     except stripe.error.StripeError as e:
         return render(request, 'checkout_error.html', {'error': str(e)})
 
@@ -639,9 +662,32 @@ def initiate_checkout_guest(request):
             shipping_options=shipping_options,
         )
 
+        # Generate tracking number
+        track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
+
+        # Create order
+        order = Order.objects.create(
+            session_id=checkout_session.id,
+            total=subtotal,
+            delivery_address="Pendiente de ser completada",
+            track_number=track_number,
+            status='Recibido',
+        )
+
+        # Add order items
+        for product_id, item in cart.items():
+            OrderItem.objects.create(
+                order=order,
+                product=Product.objects.get(id=product_id),
+                quantity=item['quantity'],
+                price=item['price'],
+            )
+
         return redirect(checkout_session.url, code=303)
+
     except stripe.error.StripeError as e:
         return render(request, 'checkout_error.html', {'error': str(e)})
+    
     
 def track_order_guest(request):
     if request.method == 'POST':
