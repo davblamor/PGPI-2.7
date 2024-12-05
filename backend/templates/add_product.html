@@ -1,17 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Añadir Producto</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: #34495e;
+        }
+        .header p {
+            margin-top: 5px;
+            font-size: 1rem;
+            color: #7f8c8d;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        form label {
+            font-size: 1rem;
+            color: #34495e;
+            font-weight: bold;
+        }
+        form input, form textarea, form select {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #dcdde1;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        form button {
+            background-color: #27ae60;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        form button:hover {
+            background-color: #1e874b;
+        }
+        .back-link {
+            display: inline-block;
+            text-decoration: none;
+            color: #3498db;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            transition: color 0.3s;
+        }
+        .back-link:hover {
+            color: #2980b9;
+        }
+        .footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #95a5a6;
+            margin-top: 30px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Añadir Producto</h1>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-    </form>
-    <a href="{% url 'catalogo' %}">Volver al Catálogo</a>
+    <div class="container">
+        <div class="header">
+            <h1>Añadir Producto</h1>
+            <p>Rellena los campos para añadir un nuevo producto al catálogo.</p>
+        </div>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div>
+                <label for="id_name">Nombre del Producto:</label>
+                {{ form.name }}
+            </div>
+            
+            <div>
+                <label for="id_description">Descripción:</label>
+                {{ form.description }}
+            </div>
+            
+            <div>
+                <label for="id_price">Precio:</label>
+                {{ form.price }}
+            </div>
+            
+            <div>
+                <label for="id_stock">Stock:</label>
+                {{ form.stock }}
+            </div>
+            
+            <div>
+                <label for="id_image">Imagen:</label>
+                {{ form.image }}
+            </div>
+            
+            <div>
+                <label for="id_category">Categoría:</label>
+                {{ form.category }}
+            </div>
+            
+            <div>
+                <label for="id_manufacturer">Fabricante:</label>
+                {{ form.manufacturer }}
+            </div>
+            
+            <button type="submit">Guardar</button>
+        </form>
+
+        <a href="{% url 'catalogo' %}" class="back-link">Volver al Catálogo</a>
+
+        <div class="footer">
+            &copy; 2024 Tienda Virtual. Todos los derechos reservados.
+        </div>
+    </div>
 </body>
 </html>
