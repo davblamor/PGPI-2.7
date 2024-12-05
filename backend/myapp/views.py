@@ -341,6 +341,13 @@ def initiate_checkout(request):
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
     YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"
+    
+    address_line_1 = request.POST.get('address_line_1')
+    address_line_2 = request.POST.get('address_line_2', '')
+    city = request.POST.get('city')
+    province = request.POST.get('province', '')
+    postal_code = request.POST.get('postal_code')
+    country = request.POST.get('country')
 
     line_items = [
         {
@@ -416,7 +423,7 @@ def initiate_checkout(request):
             user=request.user,
             session_id=checkout_session.id,
             total=subtotal,
-            delivery_address="Pendiente de ser completada",
+            delivery_address=f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}",
             track_number=track_number,
             status='Recibido',
         )
@@ -574,6 +581,13 @@ def initiate_checkout_guest(request):
     cart = request.session.get('cart', {})
     if not cart:
         return redirect('cart_guest')
+    
+    address_line_1 = request.POST.get('address_line_1')
+    address_line_2 = request.POST.get('address_line_2', '')
+    city = request.POST.get('city')
+    province = request.POST.get('province', '')
+    postal_code = request.POST.get('postal_code')
+    country = request.POST.get('country')
 
     productos_no_existentes = []
     for product_id, item in list(cart.items()):
@@ -669,7 +683,7 @@ def initiate_checkout_guest(request):
         order = Order.objects.create(
             session_id=checkout_session.id,
             total=subtotal,
-            delivery_address="Pendiente de ser completada",
+            delivery_address=f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}",
             track_number=track_number,
             status='Recibido',
         )
@@ -854,7 +868,7 @@ def finalize_cash_on_delivery(request):
             total=total_price,
             delivery_address=f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}",
             track_number=f"TRACK-{uuid.uuid4().hex[:10].upper()}",
-            status='Received',
+            status='Recibido',
         )
 
         for item in cart_items:
@@ -977,7 +991,7 @@ def finalize_guest_cash_on_delivery(request):
             total=total_price,
             delivery_address=address,
             track_number=track_number,
-            status='Received',
+            status='Recibido',
         )
 
         for item in cart_items:
