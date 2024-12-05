@@ -324,27 +324,28 @@
                     <p class="price">€{{ producto.price }}</p>
                     <p class="stock">Stock: {{ producto.stock }}</p>
 
+                    <!-- Show add to cart button only if stock > 0 -->
                     {% if producto.stock > 0 %}
-                    <!-- Form for adding a product to the cart -->
                     <form
                         action="{% if user.is_authenticated %}{% url 'add_to_cart' producto.id %}{% else %}{% url 'add_to_cart_guest' producto.id %}{% endif %}"
                         method="post" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit">Añadir a la cesta</button>
                     </form>
+                    {% else %}
+                    <p style="color: red; font-weight: bold;">Producto Agotado</p>
+                    {% endif %}
+
+                    <!-- Always show admin buttons -->
                     {% if user.is_staff %}
-                    <!-- Separate form for deleting a product -->
+                    <a href="{% url 'update_product' producto.id %}" class="admin-orders-button"
+                        style="background-color: blue; color: white;">Actualizar producto</a>
                     <form action="{% url 'delete_product' producto.id %}" method="post" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" style="background-color: red; color: white;">Eliminar producto</button>
                     </form>
                     {% endif %}
-                    {% else %}
-                    <p style="color: red; font-weight: bold;">Producto Agotado</p>
-                    {% endif %}
-
                 </div>
-
                 {% empty %}
                 <p>No hay productos disponibles.</p>
                 {% endfor %}

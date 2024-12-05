@@ -1029,3 +1029,16 @@ def delete_product(request, product_id):
     product.delete()
     messages.success(request, 'Producto eliminado con éxito.')
     return redirect('catalogo')
+
+@staff_member_required
+def update_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)  # Accept files for image updates
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Producto actualizado con éxito.')
+            return redirect('catalogo')
+    else:
+        form = ProductForm(instance=product)
+    return render(request, 'update_product.html', {'form': form, 'product': product})
