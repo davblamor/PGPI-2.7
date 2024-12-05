@@ -330,134 +330,137 @@ class StripeCheckoutSessionView(View):
             return JsonResponse({'error': str(e)}, status=400)
 
         
-from django.shortcuts import render
-from django.http import JsonResponse
-
 @login_required
 def initiate_checkout(request):
+    if request.method != "POST":
+        messages.error(request, "Por favor, utiliza el formulario de pago para proceder.")
+        return redirect('cart')
+
     cart = Cart.objects.filter(user=request.user).first()
     if not cart or not cart.item.exists():
+        messages.error(request, "Tu carrito está vacío.")
         return redirect('cart')
 
     cart_items = cart.item.all()
     subtotal = sum(item.product.price * item.quantity for item in cart_items)
 
-    if request.method == "POST":
-        # Collect address details from the form
-        address_line_1 = request.POST.get('address_line_1')
-        address_line_2 = request.POST.get('address_line_2', '')
-        city = request.POST.get('city')
-        province = request.POST.get('province', '')
-        postal_code = request.POST.get('postal_code')
-        country = request.POST.get('country')
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"
+    
+    # Collect address details
+    address_line_1 = request.POST.get('address_line_1')
+    address_line_2 = request.POST.get('address_line_2', '')
+    city = request.POST.get('city')
+    province = request.POST.get('province', '')
+    postal_code = request.POST.get('postal_code')
+    country = request.POST.get('country')
 
-        # Ensure all mandatory fields are provided
-        if not all([address_line_1, city, postal_code, country]):
-            return render(request, 'checkout_error.html', {
-                'error': 'Por favor, completa todos los campos obligatorios para continuar con el pago.'
-            })
+    # Debug: Print collected data
+    print("Address Details:")
+    print(f"Line 1: {address_line_1}, Line 2: {address_line_2}, City: {city}, Province: {province}, Postal Code: {postal_code}, Country: {country}")
 
-        stripe.api_key = settings.STRIPE_SECRET_KEY
-        YOUR_DOMAIN = "https://pgpi-2-7.onrender.com"
+    # Validate address fields
+    if not all([address_line_1, city, postal_code, country]):
+        messages.error(request, "Por favor, completa todos los campos obligatorios de la dirección.")
+        return redirect('cart')
 
-        line_items = [
-            {
-                'price_data': {
-                    'currency': 'eur',
-                    'product_data': {
-                        'name': item.product.name,
-                    },
-                    'unit_amount': int(item.product.price * 100),
+    line_items = [
+        {
+            'price_data': {
+                'currency': 'eur',
+                'product_data': {
+                    'name': item.product.name,
                 },
-                'quantity': item.quantity,
-            }
-            for item in cart_items
-        ]
+                'unit_amount': int(item.product.price * 100),
+            },
+            'quantity': item.quantity,
+        }
+        for item in cart_items
+    ]
 
-        # Determine shipping options
-        shipping_options = [
-            {
-                'shipping_rate_data': {
-                    'type': 'fixed_amount',
-                    'fixed_amount': {'amount': 500, 'currency': 'eur'},
-                    'display_name': 'Envío Estándar (€5.00, 5-7 días hábiles)',
-                    'delivery_estimate': {
-                        'minimum': {'unit': 'business_day', 'value': 5},
-                        'maximum': {'unit': 'business_day', 'value': 7},
-                    },
+    # Determine shipping options
+    shipping_options = [
+        {
+            'shipping_rate_data': {
+                'type': 'fixed_amount',
+                'fixed_amount': {'amount': 500, 'currency': 'eur'},
+                'display_name': 'Envío Estándar (€5.00, 5-7 días hábiles)',
+                'delivery_estimate': {
+                    'minimum': {'unit': 'business_day', 'value': 5},
+                    'maximum': {'unit': 'business_day', 'value': 7},
                 },
             },
-            {
-                'shipping_rate_data': {
-                    'type': 'fixed_amount',
-                    'fixed_amount': {'amount': 1500, 'currency': 'eur'},
-                    'display_name': 'Envío Exprés (€15.00, 1-3 días hábiles)',
-                    'delivery_estimate': {
-                        'minimum': {'unit': 'business_day', 'value': 1},
-                        'maximum': {'unit': 'business_day', 'value': 3},
-                    },
+        },
+        {
+            'shipping_rate_data': {
+                'type': 'fixed_amount',
+                'fixed_amount': {'amount': 1500, 'currency': 'eur'},
+                'display_name': 'Envío Exprés (€15.00, 1-3 días hábiles)',
+                'delivery_estimate': {
+                    'minimum': {'unit': 'business_day', 'value': 1},
+                    'maximum': {'unit': 'business_day', 'value': 3},
                 },
             },
-        ]
+        },
+    ]
 
-        if subtotal >= 1500:
-            shipping_options.append({
-                'shipping_rate_data': {
-                    'type': 'fixed_amount',
-                    'fixed_amount': {'amount': 0, 'currency': 'eur'},
-                    'display_name': 'Envío Gratuito (Pedido superior a €1500)',
-                    'delivery_estimate': {
-                        'minimum': {'unit': 'business_day', 'value': 1},
-                        'maximum': {'unit': 'business_day', 'value': 3},
-                    },
+    if subtotal >= 1500:
+        shipping_options.append({
+            'shipping_rate_data': {
+                'type': 'fixed_amount',
+                'fixed_amount': {'amount': 0, 'currency': 'eur'},
+                'display_name': 'Envío Gratuito (Pedido superior a €1500)',
+                'delivery_estimate': {
+                    'minimum': {'unit': 'business_day', 'value': 1},
+                    'maximum': {'unit': 'business_day', 'value': 3},
                 },
-            })
+            },
+        })
 
-        try:
-            checkout_session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                line_items=line_items,
-                mode='payment',
-                success_url=f"{YOUR_DOMAIN}/success/?session_id={{CHECKOUT_SESSION_ID}}",
-                cancel_url=f"{YOUR_DOMAIN}/cart/",
-                shipping_address_collection={
-                    'allowed_countries': ['US', 'CA', 'ES'],
-                },
-                shipping_options=shipping_options,
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url=f"{YOUR_DOMAIN}/success/?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{YOUR_DOMAIN}/cart/",
+            shipping_address_collection={
+                'allowed_countries': ['US', 'CA', 'ES'],
+            },
+            shipping_options=shipping_options,
+        )
+
+        # Generate tracking number
+        track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
+
+        # Create order
+        order = Order.objects.create(
+            user=request.user,
+            session_id=checkout_session.id,
+            total=subtotal,
+            delivery_address=f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}",
+            track_number=track_number,
+            status='Recibido',
+        )
+
+        # Add order items
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price,
             )
 
-            # Generate tracking number
-            track_number = f"TRACK-{uuid.uuid4().hex[:10].upper()}"
+        return redirect(checkout_session.url, code=303)
 
-            # Create order
-            order = Order.objects.create(
-                user=request.user,
-                session_id=checkout_session.id,
-                total=subtotal,
-                delivery_address=f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}",
-                track_number=track_number,
-                status='Recibido',
-            )
+    except stripe.error.StripeError as e:
+        return render(request, 'checkout_error.html', {'error': f"Error en el pago: {str(e)}"})
 
-            # Add order items
-            for item in cart_items:
-                OrderItem.objects.create(
-                    order=order,
-                    product=item.product,
-                    quantity=item.quantity,
-                    price=item.product.price,
-                )
-
-            return redirect(checkout_session.url, code=303)
-
-        except stripe.error.StripeError as e:
-            return render(request, 'checkout_error.html', {'error': str(e)})
-
-    # If not a POST request, render the checkout form
-    return render(request, 'checkout_form.html', {
-        'cart_items': cart_items,
-        'subtotal': subtotal,
-    })
+    except Exception as e:
+        print(f"Error inesperado: {str(e)}")
+        messages.error(request, "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.")
+        return redirect('cart')
 
 
 @login_required
