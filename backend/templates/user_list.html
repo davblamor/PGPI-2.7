@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Usuarios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #27ae60;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        a {
+            color: white;
+            background-color: #27ae60;
+            text-decoration: none;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        a:hover {
+            background-color: #1e874b;
+        }
+        button {
+            color: white;
+            background-color: red;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: darkred;
+        }
+        .back-button {
+            margin-top: 20px;
+            display: inline-block;
+        }
+    </style>
+    <script>
+        function confirmDeletion(userEmail) {
+            return confirm(`¿Estás seguro de que deseas eliminar al usuario: ${userEmail}?`);
+        }
+    </script>
+</head>
+<body>
+    <h1>Lista de Usuarios Registrados</h1>
+    <a href="{% url 'catalogo' %}" class="back-button">Volver al Catálogo</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Correo Electrónico</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.id != request.user.id and not user.is_superuser %}
+                        <form action="{% url 'delete_user' user.id %}" method="post" style="display: inline;" onsubmit="return confirmDeletion('{{ user.email }}');">
+                            {% csrf_token %}
+                            <button type="submit">Eliminar</button>
+                        </form>
+                    {% else %}
+                        <span style="color: gray;">No se puede eliminar</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center;">No hay usuarios registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

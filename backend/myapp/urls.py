@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
 from .views import StripeCheckoutSessionView
-from .views import success_view
+from .views import success_view, add_product
 
 
 
@@ -43,4 +43,10 @@ urlpatterns = [
     path('finalize-cash-on-delivery/', views.finalize_cash_on_delivery, name='finalize_cash_on_delivery'),
     path('staff/orders/<int:order_id>/update/', views.update_order_status, name='update_order_status'),
     path('staff/orders/', views.order_list, name='order_list'),
+    path('staff/add-product/', views.add_product, name='add_product'),
+    path('staff/delete-product/<int:product_id>/', views.delete_product, name='delete_product'),
+    path('staff/update-product/<int:product_id>/', views.update_product, name='update_product'),
+    path('staff/update-order/<int:order_id>/', views.update_order, name='update_order'),
+    path('staff/users/', views.user_list, name='user_list'),
+    path('staff/users/delete/<int:user_id>/', views.delete_user, name='delete_user'),
 ]

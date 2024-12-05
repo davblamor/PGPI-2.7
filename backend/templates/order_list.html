@@ -89,6 +89,8 @@
                         </select>
                         <button type="submit">Actualizar</button>
                     </form>
+                    <!-- Botón para actualizar el pedido -->
+                    <a href="{% url 'update_order' order.id %}" style="background-color: blue;">Actualizar Pedido</a>
                 </td>
             </tr>
             {% empty %}

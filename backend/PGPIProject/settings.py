@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-h*8e!*=(4=1p6#yw3)y0curx-ji$)!$uv+c16hjiaku8#9fgw)'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -163,13 +163,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Stripe API Configuration
-STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', 'pk_test_51QMZkdK3ST65uLzHSxCUtSznKOGLJAYiVyupAhi2DA5P8dwvCkaOcRx4M0FvbOuQYnleareipjcFhNJmjrnzGY6N00dZVudxTy') 
-STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', 'sk_test_51QMZkdK3ST65uLzHdfpHCtvQUGsDbXJROffmCjRN1a6bjqpGLBRqTQFCiezhybaAfYHLFF7s2ixI6wXpkmcu9xlu00Z4RD7tG1')
 
 # Stripe API Configuration
 STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY')
