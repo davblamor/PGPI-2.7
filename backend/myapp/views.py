@@ -1042,3 +1042,20 @@ def update_product(request, product_id):
     else:
         form = ProductForm(instance=product)
     return render(request, 'update_product.html', {'form': form, 'product': product})
+
+@staff_member_required
+def update_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        address = request.POST.get('delivery_address')
+        phone = request.POST.get('phone')
+
+        # Update order details
+        order.delivery_address = address
+        order.phone = phone
+        order.user.email = email
+        order.save()
+        return redirect('order_list')
+
+    return render(request, 'update_order.html', {'order': order})
