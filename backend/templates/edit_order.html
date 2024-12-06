@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Pedido</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #card-details {
+            display: none;
+        }
+    </style>
+    <script>
+        function toggleCardPayment() {
+            const cardDetails = document.getElementById('card-details');
+            const paymentMethod = document.getElementById('payment-method').value;
+            cardDetails.style.display = paymentMethod === "Tarjeta" ? "block" : "none";
+
+            // Habilitar o deshabilitar campos según el método de pago
+            const inputs = cardDetails.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.disabled = paymentMethod !== "Tarjeta";
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Editar Pedido</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="delivery_address">Dirección de Entrega:</label>
+        <input type="text" id="delivery_address" name="delivery_address" value="{{ order.delivery_address }}" required>
+
+        <label for="email">Correo Electrónico:</label>
+        <input type="email" id="email" name="email" value="{{ order.email }}" required>
+
+        <label for="payment-method">Método de Pago:</label>
+        <select id="payment-method" name="payment_method" onchange="toggleCardPayment()">
+            <option value="Contrarrembolso" {% if order.payment_method == "Contrarrembolso" %}selected{% endif %}>Contrarrembolso</option>
+            <option value="Tarjeta" {% if order.payment_method == "Tarjeta" %}selected{% endif %}>Tarjeta</option>
+        </select>
+
+        <!-- Detalles de tarjeta, ocultos por defecto -->
+        <div id="card-details"
+            style="display: {% if order.payment_method == 'Tarjeta' %}block{% else %}none{% endif %}">
+            <label for="card_number">Número de Tarjeta:</label>
+            <input type="text" id="card_number" name="card_number" value="{{ order.card_number|default:'' }}"
+                maxlength="16" {% if order.payment_method != "Tarjeta" %}disabled{% endif %}>
+
+            <label for="card_expiry">Fecha de Expiración:</label>
+            <input type="month" id="card_expiry" name="card_expiry" value="{{ order.card_expiry|default:'' }}" {% if order.payment_method != "Tarjeta" %}disabled{% endif %}>
+
+            <label for="card_cvv">CVV:</label>
+            <input type="text" id="card_cvv" name="card_cvv" value="{{ order.card_cvv|default:'' }}" maxlength="3" {% if order.payment_method != "Tarjeta" %}disabled{% endif %}>
+        </div>
+
+        <button type="submit">Guardar Cambios</button>
+    </form>
+</body>
+
+</html>

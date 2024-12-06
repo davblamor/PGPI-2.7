@@ -9,9 +9,6 @@ from django.contrib.auth.views import LogoutView
 from .views import StripeCheckoutSessionView
 from .views import success_view, add_product
 
-
-
-
 urlpatterns = [
     path('', views.home, name='home'),
     path('catalogo/', views.catalogo, name='catalogo'),
@@ -36,6 +33,7 @@ urlpatterns = [
     path('track_order_guest/', views.track_order_guest, name='track_order_guest'),
     path('success_guest/', views.success_guest_view, name='success_guest'),
     path('track_order/', views.track_order, name='track_order'),
+    path('edit_order/<int:order_id>/', views.edit_order, name='edit_order'),
     path('initiate_checkout/', views.initiate_checkout, name='initiate_checkout'),
     path('cash-on-delivery-form/', views.cash_on_delivery_form, name='cash_on_delivery_form'),
     path('guest-checkout/', views.guest_cash_on_delivery_form, name='guest_cash_on_delivery_form'),
