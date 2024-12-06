@@ -1012,6 +1012,40 @@ def finalize_guest_cash_on_delivery(request):
         'error': 'Request method not allowed.'
     })
 
+@login_required
+def edit_order(request, order_id):
+    # Obtener el pedido correspondiente al usuario autenticado
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    if request.method == 'POST':
+        try:
+            # Actualizar los datos del pedido
+            order.delivery_address = request.POST.get('delivery_address')
+            order.payment_method = request.POST.get('payment_method')
+
+            # Si el método de pago es "Tarjeta", actualizar los datos de la tarjeta
+            if order.payment_method == "Card":
+                order.card_number = request.POST.get('card_number')
+                order.card_expiry = request.POST.get('card_expiry')
+                order.card_cvv = request.POST.get('card_cvv')
+            else:
+                # Limpiar los datos de tarjeta si no se usa este método
+                order.card_number = None
+                order.card_expiry = None
+                order.card_cvv = None
+
+            # Guardar los cambios
+            order.save()
+            messages.success(request, "Pedido actualizado con éxito.")
+            return redirect('track_order_guest')  # Redirige a la vista de seguimiento
+
+        except Exception as e:
+            # Manejar errores
+            messages.error(request, f"Error al actualizar el pedido: {e}")
+            return redirect('edit_order', order_id=order.id)
+
+    return render(request, 'edit_order.html', {'order': order})
+
 @staff_member_required
 def update_order_status(request, order_id):
     if request.method == "POST":

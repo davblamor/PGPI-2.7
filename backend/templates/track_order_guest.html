@@ -110,6 +110,10 @@
                 <p><strong>Total:</strong> €{{ order.total }}</p>
                 <p><strong>Dirección de entrega:</strong> {{ order.delivery_address }}</p>
                 <p><strong>Estado del pedido:</strong> {{ order.status }}</p>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'edit_order' order.id %}" class="edit-button">Editar Pedido</a>
+                {% endif %}
             </div>
         {% endif %}
 
