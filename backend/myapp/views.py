@@ -25,7 +25,7 @@ from myapp.models import Product, Category, Manufacturer, Cart, CartItem, Order,
 from myapp.serializer import ProductSerializer
 from .forms import RegistrationForm, LoginForm
 from django.contrib import messages
-from .forms import ProductForm
+from .forms import ProductForm, OrderEditForm
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -1132,3 +1132,17 @@ def delete_user(request, user_id):
     user.delete()
     messages.success(request, "Usuario eliminado con éxito.")
     return redirect('user_list')
+
+def edit_order(request, track_number):
+    order = get_object_or_404(Order, track_number = track_number )
+
+    if request.method == 'POST':
+        form = OrderEditForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "El pedido se ha actualizado correctamente.")
+            return redirect('track_order_guest', track_number =order.track_number )
+    else:
+        form = OrderEditForm(instance=order)
+
+    return render(request, 'edit_order.html', {'form': form, 'order': order})

@@ -110,6 +110,13 @@
                 <p><strong>Total:</strong> €{{ order.total }}</p>
                 <p><strong>Dirección de entrega:</strong> {{ order.delivery_address }}</p>
                 <p><strong>Estado del pedido:</strong> {{ order.status }}</p>
+                <!--Botón de editar pedido-->
+                <form method="post" action="{% url 'edit_order' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="track_number" value="{{ order.track_number }}">
+                    <button type="submit">Editar Pedido</button>
+                </form>
+                
             </div>
         {% endif %}
 

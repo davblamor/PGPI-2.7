@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
 from .views import StripeCheckoutSessionView
-from .views import success_view, add_product
+from .views import success_view, add_product, edit_order
 
 
 
@@ -49,4 +49,5 @@ urlpatterns = [
     path('staff/update-order/<int:order_id>/', views.update_order, name='update_order'),
     path('staff/users/', views.user_list, name='user_list'),
     path('staff/users/delete/<int:user_id>/', views.delete_user, name='delete_user'),
+    path('track_order_guest/<str:track_order>/editar/', views.edit_order, name='edit_order'),
 ]
