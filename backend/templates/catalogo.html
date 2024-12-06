@@ -242,6 +242,39 @@
         .search-bar button:hover {
             background-color: #1e874b;
         }
+        .footer {
+            background-color: #27ae60;
+            color: white;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-info h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .footer-info p {
+            margin: 5px 0;
+        }
+
+        .footer-logo img {
+            width: 100px;
+            height: auto;
+            border-radius: 5px;
+        }
     </style>
 </head>
 
@@ -354,6 +387,21 @@
             </div>
         </div>
     </div>
+    <!-- Pie de página -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-info">
+                <h3>JMDP2 Tienda de electrodomésticos</h3>
+                <p>Dirección: Calle Luis Montoto 123, Sevilla, España</p>
+                <p>Teléfono: +34 123 456 789</p>
+                <p>Correo: contacto@JMDP2.com</p>
+            </div>
+            <div class="footer-logo">
+                {% load static %}
+                <img src="{% static 'images/logo.jpg.webp' %}" alt="Logo de la tienda">
+            </div>
+        </div>
+    </footer>
 </body>
 
 </html>
