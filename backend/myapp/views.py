@@ -822,9 +822,7 @@ from decimal import Decimal
 @login_required
 def finalize_cash_on_delivery(request):
     if request.method == 'POST':
-        print("Formulario enviado correctamente")
-        print("Datos del POST:", request.POST)
-
+        # Obtener datos del formulario
         name = request.POST.get('name')
         email = request.POST.get('email')
         address_line_1 = request.POST.get('address_line_1')
@@ -835,28 +833,34 @@ def finalize_cash_on_delivery(request):
         country = request.POST.get('country')
         shipping_method = request.POST.get('shipping_method')
 
+        # Validar datos obligatorios
         if not all([name, email, address_line_1, city, postal_code, country, shipping_method]):
-            messages.error(request, 'Por favor, complete todos los campos obligatorios.')
+            messages.error(request, 'Por favor, completa todos los campos obligatorios.')
             return redirect('cash_on_delivery_form')
 
+        # Validar carrito
         cart = Cart.objects.filter(user=request.user).first()
         if not cart or not cart.item.exists():
             messages.error(request, 'Tu carrito está vacío.')
             return redirect('cash_on_delivery_form')
 
+        # Calcular precios
         cart_items = cart.item.all()
         subtotal = sum(item.product.price * item.quantity for item in cart_items)
         shipping_cost = Decimal('5.00') if shipping_method == 'standard' else Decimal('15.00')
         total_price = subtotal + shipping_cost
 
+        # Crear pedido
         order = Order.objects.create(
             user=request.user,
             total=total_price,
             delivery_address=f"{address_line_1}, {address_line_2}, {city}, {province}, {postal_code}, {country}",
             track_number=f"TRACK-{uuid.uuid4().hex[:10].upper()}",
-            status='Received',
+            status='Pendiente',
+            payment_method='Cash on Delivery',
         )
 
+        # Crear items del pedido
         for item in cart_items:
             OrderItem.objects.create(
                 order=order,
@@ -864,9 +868,20 @@ def finalize_cash_on_delivery(request):
                 quantity=item.quantity,
                 price=item.product.price,
             )
-
+        # Vaciar el carrito
         cart_items.delete()
 
+        # Enviar correo de confirmación
+        enviar_correo_confirmacion(order, email, name, {
+            "line1": address_line_1,
+            "line2": address_line_2,
+            "city": city,
+            "state": province,
+            "postal_code": postal_code,
+            "country": country,
+        })
+
+        # Redirigir a página de éxito
         return render(request, 'success.html', {
             'track_number': order.track_number,
             'name': name,
@@ -875,10 +890,8 @@ def finalize_cash_on_delivery(request):
             'total': total_price,
         })
 
-    messages.error(request, 'Método de solicitud inválido.')
+    messages.error(request, 'Método de solicitud no permitido.')
     return redirect('cash_on_delivery_form')
-
-
 
 @login_required
 def cash_on_delivery_form(request):
