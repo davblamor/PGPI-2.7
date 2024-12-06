@@ -103,6 +103,10 @@ class Order(models.Model):
         choices=PAYMENT_METHOD_CHOICES,
         default='Card'
     )
+    card_number = models.CharField(max_length=16, null=True, blank=True)
+    card_expiry = models.CharField(max_length=5, null=True, blank=True)  # Formato MM/YY
+    card_cvv = models.CharField(max_length=3, null=True, blank=True)  # CVV de 3 dígitos
+
 
     def __str__(self):
         return f"Order {self.track_number} - Estado: {self.status}"
